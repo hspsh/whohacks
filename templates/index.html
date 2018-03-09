@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Whois @ HS3C</title>
+</head>
+<body>
+    <h1>Whois @ HS3C</h1>
+    <ul>
+        user list
+    </ul>
+
+    {% if current_user.is_authenticated %}
+    Hi {{ current_user.name }}!
+    <h2>Unclaimed devices</h2>
+    <ol>
+        
+    </ol>
+    <h2>My devices</h2>
+    <ol>
+        
+    </ol>
+    {% endif %}
+
+</body>
+</html>
