@@ -11,16 +11,19 @@
         <li>{{ user.display_name }}</li>
     {% endfor %}
     </ul>
-
     {% if current_user.is_authenticated %}
-    Hi {{ current_user.name }}!
+    Hi {{ current_user.login }}!
     <h2>Unclaimed devices</h2>
     <ol>
-        
+    {% for dev in devices['unclaimed'] %}
+        <li><a href="/device/{{ dev[0] }}">{{ dev[0] }}</a></li>
+    {% endfor %}
     </ol>
     <h2>My devices</h2>
     <ol>
-        
+    {% for dev in devices['mine'] %}
+        <li><a href="/device/{{ dev[0] }}">{{ dev[0] }}</a></li>
+    {% endfor %}
     </ol>
     {% endif %}
 

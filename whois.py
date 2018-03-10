@@ -1,13 +1,95 @@
 #!/usr/bin/python3
 from urllib.parse import urlparse, urljoin
 from flask import Flask, flash, render_template, redirect, url_for, request, jsonify
-from flask_login import LoginManager, login_required, current_user
+from flask_login import LoginManager, login_required, current_user, login_user, logout_user
+from werkzeug.security import check_password_hash, generate_password_hash
 from datetime import datetime, timedelta
 import sqlite3
 import json
 import re
 
 import settings
+
+
+class Device():
+    """docstring for Device"""
+    def __init__(self, mac_addr, last_seen, user_id=None):
+        self.mac_addr = mac_addr
+        self.last_seen = last_seen
+        self.user_id = user_id
+        self.user_display = None
+        self.tags = []
+
+
+    def get_device(cursor, mac_addr):
+        """Get device info"""
+        cursor.execute('SELECT mac_addr, last_seen, user_id FROM whois_devices WHERE mac_addr=?', (mac_addr, ))
+        device = cursor.fetchone()
+        assert device[0] == mac_addr
+        return Device(*device)
+
+
+    def is_tagged(self, tag):
+        return False
+
+
+    def get_tags(self):
+        if self.is_tagged('invisible') is False or current_user.get_id() == self.user_id:
+            return self.tags
+
+
+class User():
+    """docstring for User"""
+    def __init__(self, id, login, display_name):
+        self.is_authenticated = True
+        self.is_active = True
+        self.is_anonymous = False
+
+        self.id = id
+        self.login = login
+        self.display_name = display_name
+
+
+    def auth(self, cursor, pwd):
+        cursor.execute('SELECT password FROM whois_users WHERE login=?', (self.login, ))
+        hash = cursor.fetchone()[0]
+        if check_password_hash(hash, pwd):
+            return True
+        else:
+            return False
+
+
+    def set_password(self, cursor, pwd):
+        cursor.execute('UPDATE whois_users SET password=? WHERE id=?', (generate_password_hash(pwd), self.id))
+
+        
+    def get_id(self):
+        return str(self.id)
+
+
+    def get_devices(self, cursor):
+        cursor.execute('SELECT mac_addr, last_seen, user_id FROM whois_devices WHERE user_id=?', (self.id, ))
+        return cursor.fetchall()
+
+    @staticmethod
+    def get_by_id(cursor, user_id):
+        cursor.execute('SELECT id, login, display_name FROM whois_users WHERE id=?', (user_id, ))
+        try:
+            return User(*cursor.fetchone())
+        except TypeError:
+            return None
+
+    @staticmethod
+    def get_by_login(cursor, login):
+        cursor.execute('SELECT id, login, display_name FROM whois_users WHERE login=?', (login, ))
+        try:
+            return User(*cursor.fetchone())
+        except TypeError:
+            return None
+
+    def is_tagged(self, tag):
+        return False
+
 
 
 app = Flask(__name__)
@@ -66,32 +148,31 @@ def post_last_seen_devices(cursor, devices):
         last_seen = VALUES(last_seen)''', devices)
 
 
-def post_device_claim(cursor, mac_addr, user_id):
-    """Attach user id to given mac address"""
-    assert current_user.get_id() == user_id
-    assert len(mac_addr) == 17
-    cursor.execute('''UPDATE whois_devices SET user_id=? WHERE mac_addr=?''', (user_id, mac_addr))
-    
-
-def post_device_claim(cursor, mac_addr, user_id):
+def post_device_claim(cursor, mac_addr, new_user_id):
     """Attach user id to given mac address"""
     assert len(mac_addr) == 17
     cursor.execute('SELECT user_id FROM whois_devices WHERE mac_addr=?', (mac_addr, ))
-    user_id = cursor.fetchone()
-    assert user_id == None or user_id == current_user.get_id()
-    cursor.execute('''UPDATE whois_devices SET user_id=? WHERE mac_addr=?''', (user_id, mac_addr))
+    user_id = cursor.fetchone()[0]
+    if user_id == None or user_id == current_user.get_id():
+        cursor.execute('''UPDATE whois_devices SET user_id=? WHERE mac_addr=?''', (new_user_id, mac_addr))
+    
+
+# def post_device_tags(cursor, mac_addr, user_id):
+#     """Attach user id to given mac address"""
+#     assert len(mac_addr) == 17
+#     cursor.execute('SELECT user_id FROM whois_devices WHERE mac_addr=?', (mac_addr, ))
+#     user_id = cursor.fetchone()
+#     if user_id == None or user_id == current_user.get_id():
+#         cursor.execute('''UPDATE whois_devices SET user_id=? WHERE mac_addr=?''', (user_id, mac_addr))
 
 
 def get_device(cursor, mac_addr):
     """Get device info"""
-    cursor.execute('SELECT mac_addr, user_id, last_seen, tags FROM whois_devices WHERE mac_addr=?', (mac_addr, ))
-    device = cursor.fetchone()
-    assert device[0] == mac_addr
-    return {'mac_addr':device[0], 
-        'last_seen':device[1], 
-        'claim':device[2] is None ? 'None' : get_user(cursor, device[2]).display_name, 
-        'tags':device[3].split(',') }
-
+    dev = Device.get_device(cursor, mac_addr)
+    return {'mac_addr':dev.mac_addr, 
+        'last_seen':dev.last_seen, 
+        'claim':dev.user_id, 
+        'tags':[]}
 
 def get_recent_devices(cursor, hours=0, minutes=30, seconds=0):
     """Get recent devices, from last 30 min by default"""
@@ -101,11 +182,6 @@ def get_recent_devices(cursor, hours=0, minutes=30, seconds=0):
     cursor.execute("SELECT * FROM whois_devices WHERE last_seen BETWEEN ? AND DATETIME('NOW')", (min_dt, ))
 
     return [row for row in cursor]
-
-
-def get_user(cursor, user_id):
-    cursor.execute('SELECT user_id, display_name FROM whois_users WHERE user_id=?', (user_id, ))
-    return cursor.fetchone()
 
 
 def get_users_at_space(cursor, devices):
@@ -119,14 +195,21 @@ def get_users_at_space(cursor, devices):
 @login_manager.user_loader
 def load_user(user_id):
     cursor = db.cursor()
-    user = get_user(cursor, user_id)
+    user = User.get_by_id(cursor, user_id)
     return user
 
 
 @app.route('/')
 def index():
     """Serve list of people in hs, listen for data but only from whitelisted devices"""
-    return render_template('index.html')
+    unclaimed = None
+    mine = None
+    if current_user.is_authenticated:
+        cursor = db.cursor()
+        recent = get_recent_devices(cursor, 12)
+        unclaimed = [dev for dev in recent if dev[2] is None]
+        mine = current_user.get_devices(cursor)
+    return render_template('index.html', devices={'unclaimed':unclaimed, 'mine':mine})
 
 
 @app.route('/now', methods=['GET'])
@@ -136,7 +219,7 @@ def now_at_space():
     cursor = db.cursor()
     devices = get_recent_devices(cursor, 10)
     user_ids = set([device[2] for device in devices if device[2] is not None])
-    users = [get_user(cursor, id) for id in user_ids]
+    users = [User.get_by_id(cursor, id) for id in user_ids]
     # should I commit?
 
     return jsonify({"users": sorted(map(lambda u: u.display_name, users)),
@@ -163,6 +246,7 @@ def device(mac_addr):
     cursor = db.cursor()
 
     if request.method == 'POST':
+        print(request.values.get('action'))
         if request.values.get('action') == 'claim':
             post_device_claim(cursor, mac_addr, current_user.get_id())
             flash('Claimed {}!'.format(mac_addr), 'alert-success')
@@ -171,35 +255,55 @@ def device(mac_addr):
             flash('Unclaimed {}!'.format(mac_addr), 'alert-info')
 
         if request.values.get('tags'):
-            flash('Can\'t set tags to {}! Unimplementerd'.format(mac_addr), 'alert-danger')
+            flash('Can\'t set tags to {}! Unimplemented'.format(mac_addr), 'alert-danger')
 
-    device = get_device(cursor, mac_addr)
     db.commit()
+    device = get_device(cursor, mac_addr)
     return render_template('device.html', device=device)
 
 
-@app.route('/register')
+@app.route('/register', methods=['GET', 'POST'])
 def register():
     """Registration form"""
+    if request.method == 'POST':
+        display_name = request.form['display_name']
+        login = request.form['username']
+        password = generate_password_hash(request.form['password'])
+
+        print(request.form)
+
+        cursor = db.cursor()
+        cursor.execute("INSERT INTO whois_users (login, display_name, password, registered_at, last_login) VALUES (?,?,?,DATETIME('NOW'),DATETIME('NOW'))", (login, display_name, password))
+        db.commit()
+        flash('Registred.', 'alert-info')
+        return redirect(url_for('login'))
     return render_template('register.html')
+
+
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     """Login using naive db or LDAP (work on it @priest)"""
     if request.method == 'POST':
-        if request.form['username'] != 'admin' or request.form['password'] != 'admin':
-            flash('Indvalid creditentials', 'alert-danger')
-        else:
-            flash('Hello {}!'.format(None), 'alert-success')
+        cursor = db.cursor()
+        user = User.get_by_login(cursor, request.form['username'])
+        if user is not None and user.auth(cursor, request.form['password']) == True:
+            login_user(user) 
+            flash('Hello {}! You can now claim and manage your devices.'.format(current_user.login), 'alert-success')
             return redirect(url_for('index'))
+        else:
+            flash('Indvalid creditentials', 'alert-danger')
+
     return render_template('login.html')
 
 
 @app.route('/logout')
 @login_required
 def logout():
+    logout_user()
     flash('Logged out.', 'alert-info')
-    pass
+    return redirect(url_for('index'))
 
 
 if __name__ == '__main__':
@@ -208,7 +312,7 @@ if __name__ == '__main__':
 
     c = db.cursor()
 
-    c.execute('CREATE TABLE IF NOT EXISTS whois_users (id INTEGER PRIMARY KEY AUTOINCREMENT, display_name VARCHAR(100), login VARCHAR(32) UNIQUE, password VARCHAR(64), access_key VARCHAR(10), registered_at DATETIME, last_login DATETIME)')
+    c.execute('CREATE TABLE IF NOT EXISTS whois_users (id INTEGER PRIMARY KEY AUTOINCREMENT, display_name VARCHAR(100), login VARCHAR(32) UNIQUE, password VARCHAR(64), registered_at DATETIME, last_login DATETIME)')
     c.execute('CREATE TABLE IF NOT EXISTS whois_devices (mac_addr VARCHAR(17) PRIMARY KEY UNIQUE, last_seen DATETIME, user_id INTEGER, tags VARCHAR(32))')
     c.execute('CREATE TABLE IF NOT EXISTS whois_history (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, date_from DATETIME, date_to DATETIME)')
  
