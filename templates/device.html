@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
 
-    <h1>{{ mac_addr }}</h1>
+    <h2>Device {{ device.mac_addr }}</h2>
 
     <p class="lead">
-        This device was last seen: {{}}
-        Claimed by: {{}}
+        This device was last seen: {{ device.last_seen }} <br>
+        Claimed by: {{ device.claim }}
     </p>
 
     {% if current_user.is_authenticated %}
