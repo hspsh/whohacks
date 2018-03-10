@@ -1,0 +1,16 @@
+aniso8601==3.0.0
+attrs==17.4.0
+click==6.7
+Flask==0.12.2
+Flask-Login==0.4.1
+freezegun==0.3.10
+itsdangerous==0.24
+Jinja2==2.10
+MarkupSafe==1.0
+pluggy==0.6.0
+py==1.5.2
+pytest==3.4.1
+python-dateutil==2.6.1
+six==1.11.0
+tikapy==0.2.1
+Werkzeug==0.14.1
