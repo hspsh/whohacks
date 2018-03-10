@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+
+    <h1>{{ mac_addr }}</h1>
+
+    <p class="lead">
+        This device was last seen: {{}}
+        Claimed by: {{}}
+    </p>
+
+    {% if current_user.is_authenticated %}
+    claim, unclaim
+    {% endif %}
+
+{% endblock %}

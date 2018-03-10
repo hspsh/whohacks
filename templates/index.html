@@ -1,12 +1,15 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Whois @ HS3C</title>
-</head>
-<body>
-    <h1>Whois @ HS3C</h1>
+{% extends "base.html" %}
+{% block content %}
+    <h2>Status</h2>
+    <p class="lead">
+        
+    There are {{ user|length }} people in HS.
+
+    </p>
     <ul>
-        user list
+    {% for user in users %}
+        <li>{{ user.display_name }}</li>
+    {% endfor %}
     </ul>
 
     {% if current_user.is_authenticated %}
@@ -21,5 +24,4 @@
     </ol>
     {% endif %}
 
-</body>
-</html>
+{% endblock %}

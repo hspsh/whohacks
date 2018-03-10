@@ -1,11 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
-    <h2>Please login</h2>
+    <h2>Register</h2>
       <br>
       <form action="" method="post">
+        <input type="text" placeholder="Display name" name="display_name" value="{{request.form.display_name }}">
         <input type="text" placeholder="Username" name="username" value="{{request.form.username }}">
         <input type="password" placeholder="Password" name="password" value="{{request.form.password }}">
-        <input class="btn btn-default" type="submit" value="Login">
+        <input class="btn btn-default" type="submit" value="Register">
       </form>
 
 {% endblock %}
