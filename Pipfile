@@ -1,0 +1,33 @@
+[[source]]
+
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+
+[dev-packages]
+
+"pytest-pep8" = "*"
+pytest = "*"
+freezegun = "*"
+
+
+[packages]
+
+attrs = "==17.4.0"
+click = "==6.7"
+flask = "*"
+flask-login = "*"
+itsdangerous = "==0.24"
+"jinja2" = "==2.10"
+markupsafe = "==1.0"
+pluggy = "==0.6.0"
+py = "==1.5.2"
+python-dateutil = "==2.6.1"
+six = "==1.11.0"
+werkzeug = "==0.14.1"
+
+
+[requires]
+
+python_version = "3.6.4"
