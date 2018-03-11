@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 from urllib.parse import urlparse, urljoin
 from flask import Flask, flash, render_template, redirect, url_for, request, jsonify
-from flask_login import LoginManager, login_required, current_user, login_user, logout_user
+from flask_login import LoginManager, login_required, current_user, login_user, logout_user, UserMixin
 from werkzeug.security import check_password_hash, generate_password_hash
 from datetime import datetime, timedelta
 import sqlite3
@@ -14,40 +14,102 @@ import settings
 class Device():
     """docstring for Device"""
     def __init__(self, mac_addr, last_seen, user_id=None):
+        assert len(mac_addr) == 17
         self.mac_addr = mac_addr
+        self.host_name = None
         self.last_seen = last_seen
         self.user_id = user_id
         self.user_display = None
-        self.tags = []
 
 
-    def get_device(cursor, mac_addr):
+    def __str__(self):
+        return '[{}]'.format(self.mac_addr)
+
+
+    @staticmethod
+    def get_by_mac(cursor, mac_addr):
         """Get device info"""
         cursor.execute('SELECT mac_addr, last_seen, user_id FROM whois_devices WHERE mac_addr=?', (mac_addr, ))
-        device = cursor.fetchone()
-        assert device[0] == mac_addr
-        return Device(*device)
+        try:
+            return Device(*cursor.fetchone())
+        except TypeError:
+            return None
 
+    @staticmethod
+    def get_recent(cursor, hours=0, minutes=30, seconds=0):
+        """Get recent devices, from last 30 min by default"""
+        min_dt = datetime.now() - timedelta(hours=hours, minutes=minutes, seconds=seconds)
+
+        cursor.execute("SELECT mac_addr, last_seen, user_id FROM whois_devices WHERE last_seen BETWEEN ? AND DATETIME('NOW')", (min_dt, ))
+
+        return [Device(*row) for row in cursor]
+
+
+    def claim(self, cursor, new_user_id):
+        """Attach user id to given mac address"""
+        if self.user_id == None or self.user_id == current_user.get_id():
+            self.user_id = new_user_id
+            cursor.execute('UPDATE whois_devices SET user_id=? WHERE mac_addr=?', 
+                (self.user_id, self.mac_addr))
+
+    def unclaim(self, cursor):
+        """Attach user id to given mac address"""
+        if self.user_id == current_user.get_id():
+            self.user_id = new_user_id
+            cursor.execute('UPDATE whois_devices SET user_id=NULL WHERE mac_addr=?', 
+                (self.mac_addr,))
+
+    @property
+    def owner(self):
+        return self.user_id
 
     def is_tagged(self, tag):
-        return False
+        pass
 
 
     def get_tags(self):
-        if self.is_tagged('invisible') is False or current_user.get_id() == self.user_id:
-            return self.tags
+        pass
 
 
-class User():
+class User(UserMixin):
     """docstring for User"""
     def __init__(self, id, login, display_name):
-        self.is_authenticated = True
-        self.is_active = True
-        self.is_anonymous = False
-
         self.id = id
         self.login = login
         self.display_name = display_name
+        self.tags = []
+
+    def __str__(self):
+        if 'hidden' in self.tags:
+            return None
+        elif 'anonymous' in self.tags:
+            return 'Anonymous'
+        elif self.display_name is not None:
+            return self.display_name
+        else:
+            return self.login
+
+
+    @staticmethod
+    def get_by_id(cursor, user_id):
+        cursor.execute('SELECT id, login, display_name FROM whois_users WHERE id=?', (user_id, ))
+        try:
+            return User(*cursor.fetchone())
+        except TypeError:
+            return None
+
+    @staticmethod
+    def get_by_login(cursor, login):
+        cursor.execute('SELECT id, login, display_name FROM whois_users WHERE login=?', (login, ))
+        try:
+            return User(*cursor.fetchone())
+        except TypeError:
+            return None
+
+
+    @staticmethod
+    def register(cursor, login, display_name, password):
+        cursor.execute("INSERT INTO whois_users (login, display_name, password, registered_at, last_login) VALUES (?,?,?,DATETIME('NOW'),DATETIME('NOW'))", (login, display_name, password))
 
 
     def auth(self, cursor, pwd):
@@ -67,28 +129,13 @@ class User():
         return str(self.id)
 
 
-    def get_devices(self, cursor):
+    def get_claimed_devices(self, cursor):
         cursor.execute('SELECT mac_addr, last_seen, user_id FROM whois_devices WHERE user_id=?', (self.id, ))
-        return cursor.fetchall()
+        return [Device(*row) for row in cursor.fetchall()]
 
-    @staticmethod
-    def get_by_id(cursor, user_id):
-        cursor.execute('SELECT id, login, display_name FROM whois_users WHERE id=?', (user_id, ))
-        try:
-            return User(*cursor.fetchone())
-        except TypeError:
-            return None
-
-    @staticmethod
-    def get_by_login(cursor, login):
-        cursor.execute('SELECT id, login, display_name FROM whois_users WHERE login=?', (login, ))
-        try:
-            return User(*cursor.fetchone())
-        except TypeError:
-            return None
 
     def is_tagged(self, tag):
-        return False
+        pass
 
 
 
@@ -148,42 +195,6 @@ def post_last_seen_devices(cursor, devices):
         last_seen = VALUES(last_seen)''', devices)
 
 
-def post_device_claim(cursor, mac_addr, new_user_id):
-    """Attach user id to given mac address"""
-    assert len(mac_addr) == 17
-    cursor.execute('SELECT user_id FROM whois_devices WHERE mac_addr=?', (mac_addr, ))
-    user_id = cursor.fetchone()[0]
-    if user_id == None or user_id == current_user.get_id():
-        cursor.execute('''UPDATE whois_devices SET user_id=? WHERE mac_addr=?''', (new_user_id, mac_addr))
-    
-
-# def post_device_tags(cursor, mac_addr, user_id):
-#     """Attach user id to given mac address"""
-#     assert len(mac_addr) == 17
-#     cursor.execute('SELECT user_id FROM whois_devices WHERE mac_addr=?', (mac_addr, ))
-#     user_id = cursor.fetchone()
-#     if user_id == None or user_id == current_user.get_id():
-#         cursor.execute('''UPDATE whois_devices SET user_id=? WHERE mac_addr=?''', (user_id, mac_addr))
-
-
-def get_device(cursor, mac_addr):
-    """Get device info"""
-    dev = Device.get_device(cursor, mac_addr)
-    return {'mac_addr':dev.mac_addr, 
-        'last_seen':dev.last_seen, 
-        'claim':dev.user_id, 
-        'tags':[]}
-
-def get_recent_devices(cursor, hours=0, minutes=30, seconds=0):
-    """Get recent devices, from last 30 min by default"""
-    min_dt = datetime.now() - timedelta(hours=hours, minutes=minutes, seconds=seconds)
-
-    cursor = db.cursor()
-    cursor.execute("SELECT * FROM whois_devices WHERE last_seen BETWEEN ? AND DATETIME('NOW')", (min_dt, ))
-
-    return [row for row in cursor]
-
-
 def get_users_at_space(cursor, devices):
     """Get users at space based on given devices, filter by tags"""
     users = {}
@@ -195,8 +206,8 @@ def get_users_at_space(cursor, devices):
 @login_manager.user_loader
 def load_user(user_id):
     cursor = db.cursor()
-    user = User.get_by_id(cursor, user_id)
-    return user
+    return User.get_by_id(cursor, user_id)
+    
 
 
 @app.route('/')
@@ -206,27 +217,27 @@ def index():
     mine = None
     if current_user.is_authenticated:
         cursor = db.cursor()
-        recent = get_recent_devices(cursor, 12)
-        unclaimed = [dev for dev in recent if dev[2] is None]
-        mine = current_user.get_devices(cursor)
+        recent = Device.get_recent(cursor, 12)
+        unclaimed = [dev for dev in recent if dev.owner is None]
+        mine = current_user.get_claimed_devices(cursor)
     return render_template('index.html', devices={'unclaimed':unclaimed, 'mine':mine})
 
 
-@app.route('/now', methods=['GET'])
+@app.route('/api/now', methods=['GET'])
 def now_at_space():
     """Send list of people currently in HS as JSON, only registred people, used by other services in HS,
     requests should be from hs3.pl domain or from HSWAN"""
     cursor = db.cursor()
     devices = get_recent_devices(cursor, 10)
-    user_ids = set([device[2] for device in devices if device[2] is not None])
+    user_ids = set([device.owner for device in devices if device.owner is not None])
     users = [User.get_by_id(cursor, id) for id in user_ids]
     # should I commit?
 
-    return jsonify({"users": sorted(map(lambda u: u.display_name, users)),
-        "unknown": len([dev for dev in devices if dev[2] is None])})
+    return jsonify({"users": sorted(map(str, users)),
+        "unknown": len([dev for dev in devices if dev.owner is None])})
 
 
-@app.route('/lastseen', methods=['POST'])
+@app.route('/api/lastseen', methods=['POST'])
 def last_seen_devices():
     """Post devices last seen by mikrotik to database
     Listen only for whitelisted devices"""
@@ -240,43 +251,46 @@ def last_seen_devices():
 
 
 @app.route('/device/<mac_addr>', methods=['GET', 'POST']) # NOTE: Nie jestem pewny czy dawać każdemu urządzeniu id czy mac. w bazie danych mogą mieć id itp, ale requesty mogą się odbywać na podstawie maców, i może łatwiej wykryć kolizje. nie wiem
-# @login_required
+@login_required
 def device(mac_addr):
     """Get info about device, claim device, release device"""
     cursor = db.cursor()
-
+    device = Device.get_by_mac(cursor, mac_addr)
     if request.method == 'POST':
         print(request.values.get('action'))
         if request.values.get('action') == 'claim':
-            post_device_claim(cursor, mac_addr, current_user.get_id())
+            device.claim(cursor, current_user.get_id())
             flash('Claimed {}!'.format(mac_addr), 'alert-success')
-        if request.values.get('action') == 'unclaim':
-            post_device_claim(cursor, mac_addr, None)
+
+        elif request.values.get('action') == 'unclaim':
+            device.unclaim(cursor)
             flash('Unclaimed {}!'.format(mac_addr), 'alert-info')
 
         if request.values.get('tags'):
             flash('Can\'t set tags to {}! Unimplemented'.format(mac_addr), 'alert-danger')
 
     db.commit()
-    device = get_device(cursor, mac_addr)
-    return render_template('device.html', device=device)
+    return render_template('device.html', device={'mac_addr':device.mac_addr, 
+        'last_seen':device.last_seen, 
+        'claim':str(User.get_by_id(cursor, device.user_id))})
 
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     """Registration form"""
     if request.method == 'POST':
+        #TODO: WTF forms or safer method
         display_name = request.form['display_name']
         login = request.form['username']
         password = generate_password_hash(request.form['password'])
 
-        print(request.form)
-
         cursor = db.cursor()
-        cursor.execute("INSERT INTO whois_users (login, display_name, password, registered_at, last_login) VALUES (?,?,?,DATETIME('NOW'),DATETIME('NOW'))", (login, display_name, password))
+        User.register(cursor, login, display_name, password)
         db.commit()
         flash('Registred.', 'alert-info')
+
         return redirect(url_for('login'))
+
     return render_template('register.html')
 
 
@@ -314,7 +328,6 @@ if __name__ == '__main__':
 
     c.execute('CREATE TABLE IF NOT EXISTS whois_users (id INTEGER PRIMARY KEY AUTOINCREMENT, display_name VARCHAR(100), login VARCHAR(32) UNIQUE, password VARCHAR(64), registered_at DATETIME, last_login DATETIME)')
     c.execute('CREATE TABLE IF NOT EXISTS whois_devices (mac_addr VARCHAR(17) PRIMARY KEY UNIQUE, last_seen DATETIME, user_id INTEGER, tags VARCHAR(32))')
-    c.execute('CREATE TABLE IF NOT EXISTS whois_history (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, date_from DATETIME, date_to DATETIME)')
  
     db.commit()
 

@@ -16,13 +16,21 @@
     <h2>Unclaimed devices</h2>
     <ol>
     {% for dev in devices['unclaimed'] %}
-        <li><a href="/device/{{ dev[0] }}">{{ dev[0] }}</a></li>
+        <li><a href="/device/{{ dev.mac_addr }}">{{ dev }}</a>
+            <form action="/device/{{ dev.mac_addr }}" method="post">
+              <button type="submit" name="your_name" value="claim" class="btn">claim</button>
+            </form>
+        </li>
     {% endfor %}
     </ol>
     <h2>My devices</h2>
     <ol>
     {% for dev in devices['mine'] %}
-        <li><a href="/device/{{ dev[0] }}">{{ dev[0] }}</a></li>
+        <li><a href="/device/{{ dev.mac_addr }}">{{ dev }}</a>
+            <form action="/device/{{ dev.mac_addr }}" method="post">
+              <button type="submit" name="your_name" value="unclaim" class="btn">unlaim</button>
+            </form>
+        </li>
     {% endfor %}
     </ol>
     {% endif %}
