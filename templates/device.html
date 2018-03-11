@@ -9,11 +9,11 @@
     </p>
 
     {% if current_user.is_authenticated %}
-    <!-- <form action="" method="post">
-        <button name="action" id="action" type="text" value="claim" type="submit">claim</button>
-    </form> -->
     <form action="" method="post">
-        <button name="action" id="action" type="text" value="unclaim" type="submit">unclaim</button>
+        <button name="action" id="action" value="claim" type="submit">claim</button>
+    </form>
+    <form action="" method="post">
+        <button name="action" id="action2" value="unclaim" type="submit">unclaim</button>
     </form>
     {% endif %}
 
