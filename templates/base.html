@@ -1,3 +1,6 @@
+
+
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -5,10 +8,40 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>{% block title %}whois @ HS3{% endblock %}</title>
+    <title>{% block title %}whois.at.hs3.pl{% endblock %}</title>
 
     <!-- Bootstrap -->
-    <link href="//wiki.hs3.pl/simplex_roboto_slab.min.css" rel="stylesheet">
+    <link href="https://bootswatch.com/4/simplex/bootstrap.min.css" rel="stylesheet">
+    <style type="text/css">
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        footer.std-hs3  {
+            background: #030303;
+            color: #eee !important;
+            font-family: monospace !important;
+            line-height: 1.2em;
+            padding: 2em 0;
+            margin-top: auto;
+        }
+
+        footer.std-hs3 ul {
+            list-style: none;
+            padding: 0;
+        }
+        footer.std-hs3 li {
+            padding-left: 1.3em;
+        }
+        footer.std-hs3 li:before {
+            content: ">"; 
+            display: inline-block;
+            margin-left: -1.3em;
+            width: 1.3em;
+        }
+    </style>
   </head>
   <body>
     {% block header %}
@@ -22,8 +55,7 @@
     <a href="/login">login</a> <a href="/register">register</a>
     {% endif %}
     {% if current_user.is_authenticated %}
-     welcome {{ current_user.login }}
-    <a href="/logout">logout</a>
+    <a href="/logout">logout ({{ current_user.login }})</a>
     {% endif %}
     </small>
     </h1>

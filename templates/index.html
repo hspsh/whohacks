@@ -2,9 +2,7 @@
 {% block content %}
     <h2>Status</h2>
     <p class="lead">
-        
     There are {{ user|length }} people in HS.
-
     </p>
     <ul>
     {% for user in users %}
@@ -13,26 +11,52 @@
     </ul>
     {% if current_user.is_authenticated %}
     Hi {{ current_user.login }}!
-    <h2>Unclaimed devices</h2>
-    <ol>
+    <h2>Recent unclaimed devices</h2>
+    <table class="table">
+        <tr>
+          <th>MAC</th>
+          <th>hostname</th>
+          <th>ownership</th>
+          <th>last seen</th>
+        </tr>
     {% for dev in devices['unclaimed'] %}
-        <li><a href="/device/{{ dev.mac_addr }}">{{ dev }}</a>
+        <tr>
+            <td>
+            <a href="/device/{{ dev.mac_addr }}">{{ dev.mac_addr }}</a>
+            </td>
+            <td></td>
+            <td>
             <form action="/device/{{ dev.mac_addr }}" method="post">
-              <button type="submit" name="action" value="claim" class="btn-link">claim</button>
+              <button type="submit" name="action" value="claim" class="btn btn-sm btn-outline-primary">claim</button>
             </form>
-        </li>
+            </td>
+            <td>{{ dev.last_seen }}</td>
+        </tr>
     {% endfor %}
-    </ol>
+    </table>
     <h2>My devices</h2>
-    <ol>
+    <table class="table">
+        <tr>
+          <th>MAC</th>
+          <th>hostname</th>
+          <th>ownership</th>
+          <th>last seen</th>
+        </tr>
     {% for dev in devices['mine'] %}
-        <li><a href="/device/{{ dev.mac_addr }}">{{ dev }}</a>
+        <tr>
+            <td>
+            <a href="/device/{{ dev.mac_addr }}">{{ dev.mac_addr }}</a>
+            </td>
+            <td></td>
+            <td>
             <form action="/device/{{ dev.mac_addr }}" method="post">
-              <button type="submit" name="action" value="unclaim" class="btn-link">unclaim</button>
+              <button type="submit" name="action" value="unclaim" class="btn btn-sm btn-outline-danger">unclaim</button>
             </form>
-        </li>
+            </td>
+            <td>{{ dev.last_seen }}</td>
+        </tr>
     {% endfor %}
-    </ol>
+    </table>
     {% endif %}
 
 {% endblock %}
