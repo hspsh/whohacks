@@ -1,148 +1,16 @@
 #!/usr/bin/python3
 import re
-import sqlite3
+from whois.database import db, Device, User
 from datetime import datetime, timedelta
 
 from flask import Flask, flash, render_template, redirect, url_for, request, \
     jsonify
 from flask_login import LoginManager, login_required, current_user, login_user, \
-    logout_user, UserMixin
+    logout_user
 from urllib.parse import urlparse, urljoin
-from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.security import generate_password_hash
 
-import settings
-
-
-class Device():
-    """docstring for Device"""
-
-    def __init__(self, mac_addr, last_seen, user_id=None):
-        assert len(mac_addr) == 17
-        self.mac_addr = mac_addr
-        self.host_name = None
-        self.last_seen = last_seen
-        self.user_id = user_id
-        self.user_display = None
-
-    def __str__(self):
-        return '[{}]'.format(self.mac_addr)
-
-    @staticmethod
-    def get_by_mac(cursor, mac_addr):
-        """Get device info"""
-        cursor.execute(
-            'SELECT mac_addr, last_seen, user_id FROM whois_devices WHERE mac_addr=?',
-            (mac_addr,))
-        try:
-            return Device(*cursor.fetchone())
-        except TypeError:
-            return None
-
-    @staticmethod
-    def get_recent(cursor, hours=0, minutes=30, seconds=0):
-        """Get recent devices, from last 30 min by default"""
-        min_dt = datetime.now() - timedelta(hours=hours, minutes=minutes,
-                                            seconds=seconds)
-
-        cursor.execute(
-            "SELECT mac_addr, last_seen, user_id FROM whois_devices WHERE last_seen BETWEEN ? AND DATETIME('NOW')",
-            (min_dt,))
-
-        return [Device(*row) for row in cursor]
-
-    def claim(self, cursor, new_user_id):
-        """Attach user id to given mac address"""
-        if self.user_id is None:
-            self.user_id = new_user_id
-            print(self.owner)
-            cursor.execute(
-                'UPDATE whois_devices SET user_id=? WHERE mac_addr=?',
-                (self.user_id, self.mac_addr))
-
-    def unclaim(self, cursor):
-        """Attach user id to given mac address"""
-        print('trying to unclaim', current_user.get_id(), self.user_id)
-        if (self.user_id == int(current_user.get_id())):
-            self.user_id = None
-            cursor.execute(
-                'UPDATE whois_devices SET user_id=NULL WHERE mac_addr=?',
-                (self.mac_addr,))
-        else:
-            print('failed')
-
-    @property
-    def owner(self):
-        return self.user_id
-
-
-
-class User(UserMixin):
-    """docstring for User"""
-
-    def __init__(self, id, login, display_name):
-        self.id = id
-        self.login = login
-        self.display_name = display_name
-        self.tags = []
-
-    def __str__(self):
-        if 'hidden' in self.tags:
-            return None
-        elif 'anonymous' in self.tags:
-            return 'Anonymous'
-        elif self.display_name is not None:
-            return self.display_name
-        else:
-            return self.login
-
-    @staticmethod
-    def get_by_id(cursor, user_id):
-        cursor.execute(
-            'SELECT id, login, display_name FROM whois_users WHERE id=?',
-            (user_id,))
-        try:
-            return User(*cursor.fetchone())
-        except TypeError:
-            return None
-
-    @staticmethod
-    def get_by_login(cursor, login):
-        cursor.execute(
-            'SELECT id, login, display_name FROM whois_users WHERE login=?',
-            (login,))
-        try:
-            return User(*cursor.fetchone())
-        except TypeError:
-            return None
-
-    @staticmethod
-    def register(cursor, login, display_name, password):
-        cursor.execute(
-            "INSERT INTO whois_users (login, display_name, password, registered_at, last_login) VALUES (?,?,?,DATETIME('NOW'),DATETIME('NOW'))",
-            (login, display_name, password))
-
-    def auth(self, cursor, pwd):
-        cursor.execute('SELECT password FROM whois_users WHERE login=?',
-                       (self.login,))
-        hash = cursor.fetchone()[0]
-        if check_password_hash(hash, pwd):
-            return True
-        else:
-            return False
-
-    def set_password(self, cursor, pwd):
-        cursor.execute('UPDATE whois_users SET password=? WHERE id=?',
-                       (generate_password_hash(pwd), self.id))
-
-    def get_id(self):
-        return str(self.id)
-
-    def get_claimed_devices(self, cursor):
-        cursor.execute(
-            'SELECT mac_addr, last_seen, user_id FROM whois_devices WHERE user_id=?',
-            (self.id,))
-        return [Device(*row) for row in cursor.fetchall()]
-
+from whois import settings
 
 app = Flask(__name__)
 app.secret_key = settings.secret_key
@@ -158,10 +26,10 @@ def is_safe_url(target):
 
 
 duration_re = re.compile(r'''((?P<weeks>\d+?)w)?
-                            ((?P<days>\d+?)d)?
-                            ((?P<hours>\d+?)h)?
-                            ((?P<minutes>\d+?)m)?
-                            ((?P<seconds>\d+?)s)?''')
+((?P<days>\d+?)d)?
+((?P<hours>\d+?)h)?
+((?P<minutes>\d+?)m)?
+((?P<seconds>\d+?)s)?''')
 
 
 def parse_duration(duration_str):
@@ -169,7 +37,7 @@ def parse_duration(duration_str):
     if not parts:
         return
     parts = parts.groupdict()
-    print (parts)
+    print(parts)
     time_params = {}
     for (name, param) in parts.items():
         if param:
@@ -226,7 +94,7 @@ def index():
         recent = Device.get_recent(cursor, 12)
         unclaimed = [dev for dev in recent if dev.owner is None]
         mine = current_user.get_claimed_devices(cursor)
-        
+
     return render_template('index.html',
                            devices={'unclaimed': unclaimed, 'mine': mine})
 
@@ -337,16 +205,3 @@ def logout():
     logout_user()
     flash('Logged out.', 'alert-info')
     return redirect(url_for('index'))
-
-
-if __name__ == '__main__':
-    db = sqlite3.connect('whosdevices.db')
-
-    c = db.cursor()
-
-    c.execute('CREATE TABLE IF NOT EXISTS whois_users (id INTEGER PRIMARY KEY AUTOINCREMENT, display_name VARCHAR(100), login VARCHAR(32) UNIQUE, password VARCHAR(64), registered_at DATETIME, last_login DATETIME)')
-    c.execute('CREATE TABLE IF NOT EXISTS whois_devices (mac_addr VARCHAR(17) PRIMARY KEY UNIQUE, last_seen DATETIME, user_id INTEGER, tags VARCHAR(32))')
-
-    db.commit()
-
-    app.run()
