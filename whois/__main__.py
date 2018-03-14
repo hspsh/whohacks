@@ -1,4 +1,4 @@
-from whois.whois import app
+from whois.web import app
 from whois.database import db
 
 c = db.cursor()
