@@ -73,7 +73,7 @@ def last_seen_devices():
     Listen only for whitelisted devices"""
     if request.remote_addr in settings.whitelist:
         data = request.get_json()
-        parsed_data = parse_mikrotik_data(data)
+        parsed_data = parse_mikrotik_data(datetime.now(), data)
 
         cursor = db.cursor()
         post_last_seen_devices(cursor, parsed_data)
