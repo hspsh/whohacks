@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "f8bc59ddb92034b7bfc777567c2f491a88e4e16935caf3fddc91842b27a163dc"
+            "sha256": "0d97b8a660498fdd5bb3b965c7ddab2a74bc4439d6c83215d5b689fcb1642c3f"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -62,6 +62,12 @@
             ],
             "version": "==1.0"
         },
+        "peewee": {
+            "hashes": [
+                "sha256:c57fa818062a4137e79619a40e97c19c839b54381bceec3e7bd040b3252e7867"
+            ],
+            "version": "==3.1.5"
+        },
         "pluggy": {
             "hashes": [
                 "sha256:7f8ae7f5bdf75671a718d2daf0a64b7885f74510bcd98b1a0bb420eb9a9d0cff"
@@ -111,6 +117,14 @@
                 "sha256:a17a9573a6f475c99b551c0e0a812707ddda1ec9653bed04c13841404ed6f450"
             ],
             "version": "==17.4.0"
+        },
+        "colorama": {
+            "hashes": [
+                "sha256:463f8483208e921368c9f306094eb6f725c6ca42b0f97e313cb5d5512459feda",
+                "sha256:48eb22f4f8461b1df5734a074b57042430fb06e1d61bd1e11b078c0fe6d7a1f1"
+            ],
+            "markers": "sys_platform == 'win32'",
+            "version": "==0.3.9"
         },
         "execnet": {
             "hashes": [

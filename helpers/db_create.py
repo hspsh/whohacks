@@ -1,8 +1,8 @@
 from datetime import datetime
 
-from whois.database import pw_db, DeviceModel
+from whois.database import db, Device, User
 
-pw_db.create_tables([DeviceModel])
+db.create_tables([Device, User])
 
-dm1 = DeviceModel.create(mac_address='00:00:00:00:00:00', last_seen=datetime.now())
+dm1 = Device.create(mac_address='00:00:00:00:00:00', last_seen=datetime.now())
 dm1.save()

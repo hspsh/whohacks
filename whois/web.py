@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-from whois.database import db, Device, User
+from whois.database import db, Device, User, post_last_seen_devices
 from datetime import datetime
 
 from flask import Flask, flash, render_template, redirect, url_for, request, \
@@ -11,28 +11,27 @@ from werkzeug.security import generate_password_hash
 from whois import settings
 from whois.utility import parse_mikrotik_data
 
+
 app = Flask(__name__)
 app.secret_key = settings.secret_key
 login_manager = LoginManager()
 login_manager.init_app(app)
 
 
-def post_last_seen_devices(cursor, devices):
-    """POST last seen devices to db, update last seen date if exists"""
-    for dev in devices:
-        assert type(dev[0]) is str
-        assert len(dev[0]) == 17
-        assert type(dev[1]) is datetime
-
-    cursor.executemany('''INSERT INTO whois_devices (mac_addr, last_seen) VALUES (?,?) 
-        ON DUPLICATE KEY UPDATE
-        last_seen = VALUES(last_seen)''', devices)
-
-
 @login_manager.user_loader
 def load_user(user_id):
-    cursor = db.cursor()
-    return User.get_by_id(cursor, user_id)
+    return User.get_by_id(user_id)
+
+
+@app.before_request
+def before_request():
+    db.connect()
+
+
+@app.after_request
+def after_request(response):
+    db.close()
+    return response
 
 
 @app.route('/')
@@ -59,7 +58,7 @@ def now_at_space():
     devices = Device.get_recent(cursor)
     user_ids = set(
         [device.owner for device in devices if device.owner is not None])
-    users = [str(User.get_by_id(cursor, id)) for id in user_ids]
+    users = [str(User.get_by_id(id)) for id in user_ids]
 
     return jsonify({"users": sorted(users),
                     "user_count": len(users),
@@ -80,9 +79,6 @@ def last_seen_devices():
         db.commit()
 
 
-# NOTE: Nie jestem pewny czy dawać każdemu urządzeniu id czy mac.
-# w bazie danych mogą mieć id itp, ale requesty mogą się odbywać na
-# podstawie maców, i może łatwiej wykryć kolizje. nie wiem
 @app.route('/device/<mac_addr>', methods=['GET', 'POST'])
 @login_required
 def device(mac_addr):
