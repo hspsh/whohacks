@@ -1,10 +1,20 @@
 import sqlite3
+
+import peewee as pw
 from datetime import datetime, timedelta
 
 from flask_login import current_user, UserMixin
 from werkzeug.security import check_password_hash, generate_password_hash
 
 db = sqlite3.connect('whosdevices.db')
+pw_db = pw.SqliteDatabase('pw.db')
+
+class DeviceModel(pw.Model):
+    mac_address = pw.FixedCharField(max_length=17)
+    last_seen = pw.DateTimeField()
+
+    class Meta:
+        database = pw_db
 
 
 class Device():
