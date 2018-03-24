@@ -55,7 +55,7 @@
     <a href="/login">login</a> <a href="/register">register</a>
     {% endif %}
     {% if current_user.is_authenticated %}
-    <a href="/logout">logout ({{ current_user.login }})</a>
+    <a href="/logout">logout ({{ current_user.username }})</a>
     {% endif %}
     </small>
     </h1>

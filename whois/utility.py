@@ -17,11 +17,15 @@ duration_re = re.compile(
 
 
 def parse_duration(duration_str):
+    """
+    Parse duration of time
+    :param duration_str:
+    :return: timedelta
+    """
     parts = duration_re.match(duration_str)
     if not parts:
         return
     parts = parts.groupdict()
-    # print(parts)
     time_params = {}
     for (name, param) in parts.items():
         if param:

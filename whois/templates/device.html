@@ -1,20 +1,23 @@
 {% extends "base.html" %}
 {% block content %}
 
-    <h2>Device {{ device.mac_addr }}</h2>
+    <h2>Device {{ device.mac_address }}</h2>
 
     <p class="lead">
         This device was last seen: {{ device.last_seen }} <br>
-        Claimed by: {{ device.claim }}
+        Claimed by: {{ device.owner }}
     </p>
 
     {% if current_user.is_authenticated %}
-    <form action="" method="post">
-        <button name="action" id="action" value="claim" type="submit">claim</button>
-    </form>
-    <form action="" method="post">
-        <button name="action" id="action2" value="unclaim" type="submit">unclaim</button>
-    </form>
+        <form action="" method="post">
+            <button name="action" id="action" value="claim" type="submit"
+                    class="btn btn-outline-primary">claim
+            </button>
+        </form><form action="" method="post">
+            <button name="action" id="action2" value="unclaim" type="submit"
+                    class="btn btn-outline-primary">unclaim
+            </button>
+        </form>
     {% endif %}
 
 {% endblock %}

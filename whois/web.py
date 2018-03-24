@@ -1,16 +1,15 @@
 #!/usr/bin/python3
-from whois.database import db, Device, User, post_last_seen_devices
+import json
 from datetime import datetime
 
 from flask import Flask, flash, render_template, redirect, url_for, request, \
-    jsonify
+    jsonify, abort
 from flask_login import LoginManager, login_required, current_user, login_user, \
     logout_user
-from werkzeug.security import generate_password_hash
 
 from whois import settings
+from whois.database import db, Device, User
 from whois.utility import parse_mikrotik_data
-
 
 app = Flask(__name__)
 app.secret_key = settings.secret_key
@@ -20,7 +19,13 @@ login_manager.init_app(app)
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.get_by_id(user_id)
+    user = User.get_by_id(user_id)
+
+    #TODO: do modelu
+    user.is_authenticated = True
+    user.is_anonymous = False
+
+    return user
 
 
 @app.before_request
@@ -39,73 +44,92 @@ def index():
     """Serve list of people in hs, show panel for logged users"""
     unclaimed = None
     mine = None
+    recent = Device.get_recent(12)
+    users = set(
+        [device.owner for device in recent if device.owner is not None])
     if current_user.is_authenticated:
-        cursor = db.cursor()
-        recent = Device.get_recent(cursor, 12)
         unclaimed = [dev for dev in recent if dev.owner is None]
-        mine = current_user.get_claimed_devices(cursor)
+        mine = [device for device in current_user.devices]
 
     return render_template('index.html',
-                           devices={'unclaimed': unclaimed, 'mine': mine})
+                           devices={'unclaimed': unclaimed, 'mine': mine},
+                           users=users)
 
 
 @app.route('/api/now', methods=['GET'])
 def now_at_space():
-    """Send list of people currently in HS as JSON, only registred people,
+    """
+    Send list of people currently in HS as JSON, only registred people,
     used by other services in HS,
-    requests should be from hs3.pl domain or from HSWAN"""
-    cursor = db.cursor()
-    devices = Device.get_recent(cursor)
-    user_ids = set(
-        [device.owner for device in devices if device.owner is not None])
-    users = [str(User.get_by_id(id)) for id in user_ids]
-
+    requests should be from hs3.pl domain or from HSWAN
+    """
+    devices = Device.get_recent()
+    users = [device.owner.display_name for device in devices if
+             device.owner is not None]
+    users = set(users)
     return jsonify({"users": sorted(users),
                     "user_count": len(users),
-                    "unknown_dev": len(
+                    "unknown_devices": len(
                         [dev for dev in devices if dev.owner is None])})
 
 
 @app.route('/api/last_seen', methods=['POST'])
 def last_seen_devices():
-    """Post devices last seen by mikrotik to database
-    Listen only for whitelisted devices"""
-    if request.remote_addr in settings.whitelist:
-        data = request.get_json()
+    """
+    Post last seen devices to database
+    :return: 200
+    """
+    if True or request.remote_addr in settings.whitelist:
+        if request.is_json:
+            data = request.get_json()
+        elif request.headers.get('User-Agent') == 'Mikrotik/6.x Fetch':
+            data = json.loads(request.values.get('data', []))
+        else:
+            data = []
+            abort(501)
+
         parsed_data = parse_mikrotik_data(datetime.now(), data)
 
-        cursor = db.cursor()
-        post_last_seen_devices(cursor, parsed_data)
-        db.commit()
+        with db.atomic():
+            for dev in parsed_data:
+                Device.update_or_create(**dev)
+
+        return 'OK', 200
 
 
-@app.route('/device/<mac_addr>', methods=['GET', 'POST'])
+@app.route('/device/<mac_address>', methods=['GET', 'POST'])
 @login_required
-def device(mac_addr):
+def device(mac_address):
     """Get info about device, claim device, release device"""
-    cursor = db.cursor()
-    dev = Device.get_by_mac(cursor, mac_addr)
+    device = Device.get(Device.mac_address == mac_address)
     if request.method == 'POST':
         print('Got action: ' + request.values.get('action'))
-        if request.values.get('action') == 'claim':
-            dev.claim(cursor, current_user.get_id())
-            flash('Claimed {}!'.format(mac_addr), 'alert-success')
-
-        elif request.values.get('action') == 'unclaim':
-            dev.unclaim(cursor)
-            flash('Unclaimed {}!'.format(mac_addr), 'alert-info')
+        if request.values.get('action') == 'claim' and device.owner is None:
+            device.owner = current_user.get_id()
+            flash('Claimed {}!'.format(mac_address), 'alert-success')
+            device.save()
+            # return 'OK', 200
+        elif request.values.get(
+                'action') == 'unclaim' and device.owner.get_id() == current_user.get_id():
+            device.owner = None
+            device.save()
+            flash('Unclaimed {}!'.format(mac_address), 'alert-info')
+            # return 'OK', 200
 
         if request.values.get('tags'):
-            flash('Can\'t set tags to {}! Unimplemented'.format(mac_addr),
+            flash('Can\'t set tags to {}! Unimplemented'.format(mac_address),
                   'alert-danger')
+            # return 'Not implemented', 501
 
-    db.commit()
+    if device.owner is not None:
+        owner = device.owner.username
+    else:
+        owner = None
 
     return render_template('device.html',
-                           device={'mac_addr': dev.mac_addr,
-                                   'last_seen': dev.last_seen,
-                                   'claim': str(User.get_by_id(cursor,
-                                                               dev.user_id))})
+                           device={'mac_address': device.mac_address,
+                                   'last_seen': device.last_seen,
+                                   'owner': owner})
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -114,14 +138,13 @@ def register():
     if request.method == 'POST':
         # TODO: WTF forms dla lepszego bezpieczeństwa
         display_name = request.form['display_name']
-        login = request.form['username']
-        password = generate_password_hash(request.form['password'])
+        username = request.form['username']
+        password = request.form['password']
 
-        cursor = db.cursor()
-        User.register(cursor, login, display_name, password)
-        db.commit()
+        user = User.register(username, password, display_name)
+        user.save()
+
         flash('Registered.', 'alert-info')
-
         return redirect(url_for('login'))
 
     return render_template('register.html')
@@ -131,14 +154,12 @@ def register():
 def login():
     """Login using naive db or LDAP (work on it @priest)"""
     if request.method == 'POST':
-        cursor = db.cursor()
-        user = User.get_by_login(cursor, request.form['username'])
-        if user is not None and user.auth(cursor,
-                                          request.form['password']) == True:
+        user = User.get(User.username == request.form['username'])
+        if user is not None and user.auth(request.form['password']) is True:
             login_user(user)
             flash(
                 'Hello {}! You can now claim and manage your devices.'.format(
-                    current_user.login), 'alert-success')
+                    current_user.username), 'alert-success')
             return redirect(url_for('index'))
         else:
             flash('Invalid credentials', 'alert-danger')

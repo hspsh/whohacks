@@ -2,7 +2,8 @@
 {% block content %}
     <h2>Status</h2>
     <p class="lead">
-    There are {{ user|length }} people in HS.
+        There are {{ users|length }} carbon-based lifeforms in HS
+        according to our measurements.
     </p>
     <ul>
     {% for user in users %}
@@ -22,11 +23,11 @@
     {% for dev in devices['unclaimed'] %}
         <tr>
             <td>
-            <a href="/device/{{ dev.mac_addr }}">{{ dev.mac_addr }}</a>
+            <a href="/device/{{ dev.mac_address }}">{{ dev.mac_address }}</a>
             </td>
-            <td></td>
+            <td>{{ dev.hostname }}</td>
             <td>
-            <form action="/device/{{ dev.mac_addr }}" method="post">
+            <form action="/device/{{ dev.mac_address }}" method="post">
               <button type="submit" name="action" value="claim" class="btn btn-sm btn-outline-primary">claim</button>
             </form>
             </td>
@@ -45,11 +46,11 @@
     {% for dev in devices['mine'] %}
         <tr>
             <td>
-            <a href="/device/{{ dev.mac_addr }}">{{ dev.mac_addr }}</a>
+            <a href="/device/{{ dev.mac_address }}">{{ dev.mac_address }}</a>
             </td>
-            <td></td>
+            <td>{{ dev.hostname }}</td>
             <td>
-            <form action="/device/{{ dev.mac_addr }}" method="post">
+            <form action="/device/{{ dev.mac_address }}" method="post">
               <button type="submit" name="action" value="unclaim" class="btn btn-sm btn-outline-danger">unclaim</button>
             </form>
             </td>
