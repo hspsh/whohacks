@@ -10,6 +10,7 @@ name = "pypi"
 "pytest-pep8" = "*"
 pytest = "*"
 freezegun = "*"
+gunicorn = "*"
 
 
 [packages]

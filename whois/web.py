@@ -10,6 +10,10 @@ from flask_login import LoginManager, login_required, current_user, login_user, 
 from whois import settings
 from whois.database import db, Device, User
 from whois.utility import parse_mikrotik_data
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 app = Flask(__name__)
 app.secret_key = settings.secret_key
@@ -24,12 +28,16 @@ def load_user(user_id):
 
 @app.before_request
 def before_request():
+    logging.info('connecting to db')
     db.connect()
 
 
 @app.teardown_appcontext
 def after_request(error):
+    logging.info('closing db')
     db.close()
+    if error:
+        logger.error(error)
 
 
 @app.route('/')
@@ -60,6 +68,9 @@ def now_at_space():
     users = [device.owner.display_name for device in devices if
              device.owner is not None]
     users = set(users)
+
+    logger.info('sending request for /api/now')
+
     return jsonify({"users": sorted(users),
                     "user_count": len(users),
                     "unknown_devices": len(
@@ -73,22 +84,31 @@ def last_seen_devices():
     :return: status code
     """
     if request.remote_addr in settings.whitelist:
+        logger.info(
+            'request from whitelist: {}'.format(request.remote_addr))
         if request.is_json:
+            logger.info('got json')
             data = request.get_json()
         elif request.headers.get('User-Agent') == 'Mikrotik/6.x Fetch':
+            logger.info('got data from mikrotik')
             data = json.loads(request.values.get('data', []))
         else:
             data = []
-            abort(501)
+            logger.warning('bad request \n{}'.format(request.headers))
+            abort(400)
 
         parsed_data = parse_mikrotik_data(datetime.now(), data)
+        logger.info('parsed data, got {} devices'.format(len(parsed_data)))
 
         with db.atomic():
             for dev in parsed_data:
                 Device.update_or_create(**dev)
 
+        logger.info('updated last seen devices')
+
         return 'OK', 200
     else:
+        logger.warning('request from outside whitelist: {}'.format(request.remote_addr))
         return 'NOPE', 403
 
 
@@ -100,15 +120,18 @@ def device(mac_address):
     if request.method == 'POST':
         if request.values.get('action') == 'claim' and device.owner is None:
             device.owner = current_user.get_id()
-            flash('Claimed {}!'.format(mac_address), 'alert-success')
             device.save()
+            logger.info(
+                '{} claimed {}'.format(current_user.username, mac_address))
+            flash('Claimed {}!'.format(mac_address), 'alert-success')
 
         elif request.values.get(
                 'action') == 'unclaim' and device.owner.get_id() == current_user.get_id():
             device.owner = None
             device.save()
+            logger.info(
+                '{} claimed {}'.format(current_user.username, mac_address))
             flash('Unclaimed {}!'.format(mac_address), 'alert-info')
-
         if request.values.get('flags'):
             new_flags = request.form.getlist('flags')
 
@@ -118,8 +141,9 @@ def device(mac_address):
             print(device.flags)
             device.save()
 
-            flash('Flags set'.format(mac_address),
-                  'alert-info')
+            logger.info(
+                '{} changed {} flags to {}'.format(current_user.username, mac_address, device.flags) )
+            flash('Flags set'.format(mac_address), 'alert-info')
 
     return render_template('device.html', device=device)
 
@@ -140,8 +164,9 @@ def register():
                 flash('Password too short, minimum length is 3')
             else:
                 print(exc)
-        finally:
+        else:
             user.save()
+            logger.info('registred new user: {}'.format(user.username))
             flash('Registered.', 'alert-info')
 
         return redirect(url_for('login'))
@@ -160,11 +185,13 @@ def login():
 
         if user is not None and user.auth(request.form['password']) is True:
             login_user(user)
+            logger.info('logged in: {}'.format(user.username))
             flash(
                 'Hello {}! You can now claim and manage your devices.'.format(
                     current_user.username), 'alert-success')
             return redirect(url_for('index'))
         else:
+            logger.info('failed log in: {}'.format(user.username))
             flash('Invalid credentials', 'alert-danger')
 
     return render_template('login.html')
@@ -174,6 +201,7 @@ def login():
 @login_required
 def logout():
     logout_user()
+    logger.info('logged out: {}'.format(user.username))
     flash('Logged out.', 'alert-info')
     return redirect(url_for('index'))
 
@@ -181,6 +209,7 @@ def logout():
 @app.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile_edit():
+    # TODO: logging
     if request.method == 'POST':
         if current_user.auth(request.values.get('password', None)) is True:
             try:
@@ -191,7 +220,7 @@ def profile_edit():
                     flash('Password too short, minimum length is 3', 'alert-warning')
                 else:
                     print(exc)
-            finally:
+            else:
                 current_user.display_name = request.form['display_name']
                 new_flags = request.form.getlist('flags')
                 current_user.is_hidden = 'hidden' in new_flags
