@@ -27,10 +27,9 @@ def before_request():
     db.connect()
 
 
-@app.after_request
-def after_request(response):
+@app.teardown_appcontext
+def after_request(error):
     db.close()
-    return response
 
 
 @app.route('/')
