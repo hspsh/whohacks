@@ -5,7 +5,7 @@
 
     <p class="lead">
         This device was last seen: {{ device.last_seen }} <br>
-        Claimed by: {{ device.owner }}
+        Claimed by: {{ device.owner|default('no-one') }}
     </p>
 
     {% if current_user.is_authenticated %}

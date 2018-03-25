@@ -25,21 +25,21 @@ class User(pw.Model):
         :return: user instance
         """
         # TODO: ehh
-        user = cls.create(username=username, _password='todo')
+        user = cls.create(username=username, _password='todo', display_name=display_name)
         user.password = password
         return user
 
     @property
     def is_active(self):
-        """
-        Równie dobrze może być samo true, ale tak przynajmniej sprawdzane jest username
-        :return: bool
-        """
         return self.username is not None
 
     @property
-    def display_name(self):
-        return self.username
+    def is_authenticated(self):
+        return True
+
+    @property
+    def is_anonymous(self):
+        return False
 
     @property
     def password(self):

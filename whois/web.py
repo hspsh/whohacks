@@ -19,13 +19,7 @@ login_manager.init_app(app)
 
 @login_manager.user_loader
 def load_user(user_id):
-    user = User.get_by_id(user_id)
-
-    #TODO: do modelu
-    user.is_authenticated = True
-    user.is_anonymous = False
-
-    return user
+    return User.get_by_id(user_id)
 
 
 @app.before_request
@@ -79,6 +73,7 @@ def last_seen_devices():
     Post last seen devices to database
     :return: 200
     """
+    print(request.remote_addr)
     if True or request.remote_addr in settings.whitelist:
         if request.is_json:
             data = request.get_json()
