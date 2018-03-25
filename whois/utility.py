@@ -5,6 +5,22 @@ from urllib.parse import urlparse, urljoin
 from flask import request
 
 
+def count_people(devices):
+    pass
+
+
+def list_people(devices):
+    pass
+
+
+def count_esp(devices):
+    pass
+
+
+def count_unclaimed(devices):
+    pass
+
+
 def is_safe_url(target):
     ref_url = urlparse(request.host_url)
     test_url = urlparse(urljoin(request.host_url, target))

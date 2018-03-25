@@ -134,10 +134,17 @@ def register():
         username = request.form['username']
         password = request.form['password']
 
-        user = User.register(username, password, display_name)
-        user.save()
+        try:
+            user = User.register(username, password, display_name)
+        except Exception as exc:
+            if exc.args[0] == 'too_short':
+                flash('Password too short, minimum length is 3')
+            else:
+                print(exc)
+        finally:
+            user.save()
+            flash('Registered.', 'alert-info')
 
-        flash('Registered.', 'alert-info')
         return redirect(url_for('login'))
 
     return render_template('register.html')
@@ -147,7 +154,11 @@ def register():
 def login():
     """Login using naive db or LDAP (work on it @priest)"""
     if request.method == 'POST':
-        user = User.get(User.username == request.form['username'])
+        try:
+            user = User.get(User.username == request.form['username'])
+        except User.DoesNotExist:
+            user = None
+
         if user is not None and user.auth(request.form['password']) is True:
             login_user(user)
             flash(
@@ -172,17 +183,23 @@ def logout():
 @login_required
 def profile_edit():
     if request.method == 'POST':
-        if request.form['password'] is not None and current_user.auth(request.form['password']) is True:
-            current_user.display_name = request.form['display_name']
-            if request.form['new_password'] is not None:
-                current_user.password = request.form['new_password']
-
-            new_flags = request.form.getlist('flags')
-            current_user.is_hidden = 'hidden' in new_flags
-            current_user.is_name_anonymous = 'name_anonymous' in new_flags
-            current_user.save()
-            flash('Saved', 'alert-success')
+        if current_user.auth(request.values.get('password', None)) is True:
+            try:
+                if request.form['new_password'] is not None and len(request.form['new_password']) > 0:
+                    current_user.password = request.form['new_password']
+            except Exception as exc:
+                if exc.args[0] == 'too_short':
+                    flash('Password too short, minimum length is 3', 'alert-warning')
+                else:
+                    print(exc)
+            finally:
+                current_user.display_name = request.form['display_name']
+                new_flags = request.form.getlist('flags')
+                current_user.is_hidden = 'hidden' in new_flags
+                current_user.is_name_anonymous = 'name_anonymous' in new_flags
+                current_user.save()
+                flash('Saved', 'alert-success')
         else:
-            flash('Invalid password', 'alert-critical')
+            flash('Invalid password', 'alert-danger')
 
     return render_template('profile.html', user=current_user)

@@ -62,7 +62,10 @@ class User(pw.Model):
 
     @password.setter
     def password(self, new_password):
-        self._password = generate_password_hash(new_password)
+        if len(new_password) < 3:
+            raise Exception('too_short')
+        else:
+            self._password = generate_password_hash(new_password)
 
     def auth(self, password):
         return check_password_hash(self.password, password)
@@ -81,6 +84,7 @@ class Device(pw.Model):
     is_new = flags.flag(2)
     is_infrastructure = flags.flag(4)
     is_esp = flags.flag(8)
+    is_laptop = flags.flag(16)
 
     class Meta:
         database = db
