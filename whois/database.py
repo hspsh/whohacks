@@ -11,6 +11,11 @@ class User(pw.Model):
     username = pw.CharField(unique=True)
     _password = pw.CharField(column_name='password')
     display_name = pw.CharField()
+    flags = pw.BitField(null=True)
+
+    is_hidden = flags.flag(1)
+    is_name_anonymous = flags.flag(2)
+
 
     class Meta:
         database = db
@@ -29,6 +34,12 @@ class User(pw.Model):
         user.password = password
         return user
 
+    def __str__(self):
+        if self.is_name_anonymous or self.is_hidden:
+            return 'anonymous'
+        else:
+            return self.display_name
+
     @property
     def is_active(self):
         return self.username is not None
@@ -39,6 +50,10 @@ class User(pw.Model):
 
     @property
     def is_anonymous(self):
+        """
+        Needed by flask login
+        :return:
+        """
         return False
 
     @property
@@ -63,6 +78,9 @@ class Device(pw.Model):
     flags = pw.BitField(null=True)
 
     is_hidden = flags.flag(1)
+    is_new = flags.flag(2)
+    is_infrastructure = flags.flag(4)
+    is_esp = flags.flag(8)
 
     class Meta:
         database = db

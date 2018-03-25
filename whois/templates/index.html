@@ -32,22 +32,24 @@
     </p>
     <ul>
         {% for user in users %}
-            <li>{{ user.display_name }}</li>
+            <li>{{ user }}</li>
         {% endfor %}
     </ul>
     {% if current_user.is_authenticated %}
         <h2>Recent unclaimed devices</h2>
         <table class="table">
+            {% set header_row -%}
             <tr>
                 <th>MAC</th>
                 <th>hostname</th>
                 <th>ownership</th>
                 <th>last seen</th>
             </tr>
-            {% for device in devices['unclaimed'] %}
+            {%- endset %}
+            {{ header_row }}
+            {% for device in devices['unclaimed'] -%}
                 {{ device_row(device.mac_address, device.hostname, device.last_seen,owner=claim_btn(device.mac_address)) }}
-            {% endfor %}
-
+            {%- endfor %}
             <tr>
                 <th>
                     <h2>My devices</h2>
@@ -56,15 +58,10 @@
                 <th></th>
                 <th></th>
             </tr>
-            <tr>
-                <th>MAC</th>
-                <th>hostname</th>
-                <th>ownership</th>
-                <th>last seen</th>
-            </tr>
-            {% for device in devices['mine'] %}
+            {{ header_row }}
+            {% for device in devices['mine'] -%}
                 {{ device_row(device.mac_address, device.hostname, device.last_seen, owner=unclaim_btn(device.mac_address)) }}
-            {% endfor %}
+            {%- endfor %}
         </table>
     {% endif %}
 

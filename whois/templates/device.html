@@ -1,23 +1,41 @@
 {% extends "base.html" %}
 {% block content %}
-
     <h2>Device {{ device.mac_address }}</h2>
 
     <p class="lead">
         This device was last seen: {{ device.last_seen }} <br>
-        Claimed by: {{ device.owner|default('no-one') }}
-    </p>
-
-    {% if current_user.is_authenticated %}
+        {% if device.owner == None and current_user.is_authenticated%}
         <form action="" method="post">
             <button name="action" id="action" value="claim" type="submit"
                     class="btn btn-outline-primary">claim
             </button>
-        </form><form action="" method="post">
+        </form>
+        {% else %}
+             Claimed by {{ device.owner|default('no-one') }}
+        {% endif %}
+    </p>
+
+    {% if device.owner != None and current_user.get_id() == device.owner.get_id() %}
+        <h3>Ownership settings</h3>
+        <form action="" method="post">
             <button name="action" id="action2" value="unclaim" type="submit"
-                    class="btn btn-outline-primary">unclaim
+                    class="btn btn-outline-danger">unclaim
             </button>
         </form>
+        <form method="post">
+            <div class="form-group">
+                <label for="flags">Multi-select flags</label>
+                <select name="flags" multiple class="form-control" id="flags">
+                    <option {{ check_flag(device.is_hidden) }}>hidden</option>
+                    <option {{ check_flag(device.is_esp) }}>esp</option>
+                    <option {{ check_flag(device.is_infrastructure) }}>infrastructure</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-outline-primary">save flags
+            </button>
+        </form>
+
     {% endif %}
+
 
 {% endblock %}
