@@ -25,7 +25,13 @@ login_manager.init_app(app)
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.get_by_id(user_id)
+    try:
+        return User.get_by_id(user_id)
+    except User.DoesNotExist as exc:
+        logger.error('{}'.format(exc))
+        logger.error('cleanup')
+        logout_user()
+        return None
 
 
 @app.before_request
