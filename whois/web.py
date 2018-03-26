@@ -10,8 +10,9 @@ from flask_login import LoginManager, login_required, current_user, login_user, 
 
 from whois import settings
 from whois.database import db, Device, User
+from whois.helpers import owners_from_devices, filter_hidden, \
+    unclaimed_devices, filter_anon_names
 from whois.mikrotik import parse_mikrotik_data
-from whois.helpers import owners_from_devices, filter_hidden, unclaimed_devices, filter_usernames, count
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -44,18 +45,18 @@ def after_request(error):
 @app.route('/')
 def index():
     """Serve list of people in hs, show panel for logged users"""
-    unclaimed = None
-    mine = None
     recent = Device.get_recent(**settings.recent_time)
     users = filter_hidden(owners_from_devices(recent))
 
     if current_user.is_authenticated:
         unclaimed = unclaimed_devices(recent)
         mine = current_user.devices
+        return render_template('index.html', unclaimed=unclaimed,
+                               my_devices=mine, users=filter_anon_names(users),
+                               headcount=len(users))
 
-    return render_template('index.html',
-                           devices={'unclaimed': unclaimed, 'mine': mine},
-                           users=filter_usernames(users), headcount=count(users))
+    return render_template('index.html', users=filter_anon_names(users),
+                           headcount=len(users))
 
 
 @app.route('/api/now', methods=['GET'])
@@ -68,9 +69,9 @@ def now_at_space():
     devices = filter_hidden(Device.get_recent(**settings.recent_time))
     users = filter_hidden(owners_from_devices(devices))
 
-    data = {"users": sorted(map(str, filter_usernames(users))),
-            "headcount": count(users),
-            "unknown_devices": count(unclaimed_devices(devices))}
+    data = {"users": sorted(map(str, filter_anon_names(users))),
+            "headcount": len(users),
+            "unknown_devices": len(unclaimed_devices(devices))}
 
     logger.info('sending request for /api/now {}'.format(data))
 
@@ -86,18 +87,15 @@ def last_seen_devices():
     if request.remote_addr in settings.whitelist:
         logger.info(
             'request from whitelist: {}'.format(request.remote_addr))
-        if request.is_json:
-            logger.info('got json')
-            data = request.get_json()
-        elif request.headers.get('User-Agent') == 'Mikrotik/6.x Fetch':
+
+        if request.headers.get('User-Agent') == 'Mikrotik/6.x Fetch':
             logger.info('got data from mikrotik')
             data = json.loads(request.values.get('data', []))
+            parsed_data = parse_mikrotik_data(datetime.now(), data)
         else:
-            data = []
             logger.warning('bad request \n{}'.format(request.headers))
-            abort(400)
+            return abort(400)
 
-        parsed_data = parse_mikrotik_data(datetime.now(), data)
         logger.info('parsed data, got {} devices'.format(len(parsed_data)))
 
         with db.atomic():
@@ -110,44 +108,71 @@ def last_seen_devices():
     else:
         logger.warning(
             'request from outside whitelist: {}'.format(request.remote_addr))
-        return 'NOPE', 403
+        return abort(403)
 
 
 @app.route('/device/<mac_address>', methods=['GET', 'POST'])
 @login_required
 def device(mac_address):
     """Get info about device, claim device, release device"""
-    device = Device.get(Device.mac_address == mac_address)
+    try:
+        device = Device.get(Device.mac_address == mac_address)
+    except Device.DoesNotExist as exc:
+        logger.error('{}'.format(exc))
+        return abort(404)
+
     if request.method == 'POST':
-        if request.values.get('action') == 'claim' and device.owner is None:
-            device.owner = current_user.get_id()
-            device.save()
-            logger.info(
-                '{} claim {}'.format(current_user.username, mac_address))
-            flash('Claimed {}!'.format(mac_address), 'alert-success')
+        if request.values.get('action') == 'claim':
+            claim_device(device)
 
-        elif request.values.get(
-                'action') == 'unclaim' and device.owner.get_id() == current_user.get_id():
-            device.owner = None
-            device.save()
-            logger.info(
-                '{} unclaim {}'.format(current_user.username, mac_address))
-            flash('Unclaimed {}!'.format(mac_address), 'alert-info')
-        if request.values.get('flags'):
-            new_flags = request.form.getlist('flags')
+        elif request.values.get('action') == 'unclaim':
+            unclaim_device(device)
+            set_device_flags(device, [])
 
-            device.is_hidden = 'hidden' in new_flags
-            device.is_esp = 'esp' in new_flags
-            device.is_infrastructure = 'infrastructure' in new_flags
-            print(device.flags)
-            device.save()
-
-            logger.info(
-                '{} changed {} flags to {}'.format(current_user.username,
-                                                   mac_address, device.flags))
-            flash('Flags set'.format(mac_address), 'alert-info')
+        elif request.values.get('flags'):
+            set_device_flags(device, request.form.getlist('flags'))
 
     return render_template('device.html', device=device)
+
+
+def set_device_flags(device, new_flags):
+    if device.owner.get_id() != current_user.get_id():
+        logger.error('no permission for {}'.format(current_user.username))
+        flash('No permission!'.format(device.mac_address), 'alert-danger')
+        return
+    device.is_hidden = 'hidden' in new_flags
+    device.is_esp = 'esp' in new_flags
+    device.is_infrastructure = 'infrastructure' in new_flags
+    print(device.flags)
+    device.save()
+    logger.info(
+        '{} changed {} flags to {}'.format(current_user.username,
+                                           device.mac_address, device.flags))
+    flash('Flags set'.format(device.mac_address), 'alert-info')
+
+
+def claim_device(device):
+    if device.owner is not None:
+        logger.error('no permission for {}'.format(current_user.username))
+        flash('No permission!'.format(device.mac_address), 'alert-danger')
+        return
+    device.owner = current_user.get_id()
+    device.save()
+    logger.info(
+        '{} claim {}'.format(current_user.username, device.mac_address))
+    flash('Claimed {}!'.format(device.mac_address), 'alert-success')
+
+
+def unclaim_device(device):
+    if device.owner.get_id() != current_user.get_id():
+        logger.error('no permission for {}'.format(current_user.username))
+        flash('No permission!'.format(device.mac_address), 'alert-danger')
+        return
+    device.owner = None
+    device.save()
+    logger.info(
+        '{} unclaim {}'.format(current_user.username, device.mac_address))
+    flash('Unclaimed {}!'.format(device.mac_address), 'alert-info')
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -183,7 +208,9 @@ def login():
         try:
             user = User.get(User.username == request.form['username'])
         except User.DoesNotExist:
-            user = None
+            logger.info('failed log in: {}'.format(None))
+            flash('Invalid credentials', 'alert-danger')
+            return render_template('login.html')
 
         if user is not None and user.auth(request.form['password']) is True:
             login_user(user)
@@ -195,6 +222,7 @@ def login():
         else:
             logger.info('failed log in: {}'.format(user.username))
             flash('Invalid credentials', 'alert-danger')
+            return render_template('login.html')
 
     return render_template('login.html')
 
@@ -202,8 +230,8 @@ def login():
 @app.route('/logout')
 @login_required
 def logout():
-    logger.info('logging out: {}'.format(current_user.username))
     logout_user()
+    logger.info('logged out: {}'.format(current_user.username))
     flash('Logged out.', 'alert-info')
     return redirect(url_for('index'))
 
@@ -229,7 +257,8 @@ def profile_edit():
                 new_flags = request.form.getlist('flags')
                 current_user.is_hidden = 'hidden' in new_flags
                 current_user.is_name_anonymous = 'anonymous for public' in new_flags
-                logger.info('flags: got {} set {:b}'.format(new_flags, current_user.flags))
+                logger.info('flags: got {} set {:b}'.format(new_flags,
+                                                            current_user.flags))
                 current_user.save()
                 flash('Saved', 'alert-success')
         else:

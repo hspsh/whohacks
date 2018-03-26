@@ -47,7 +47,7 @@
             </tr>
             {%- endset %}
             {{ header_row }}
-            {% for device in devices['unclaimed'] -%}
+            {% for device in unclaimed -%}
                 {{ device_row(device.mac_address, device.hostname, device.last_seen,owner=claim_btn(device.mac_address)) }}
             {%- endfor %}
             <tr>
@@ -59,7 +59,7 @@
                 <th></th>
             </tr>
             {{ header_row }}
-            {% for device in devices['mine'] -%}
+            {% for device in my_devices -%}
                 {{ device_row(device.mac_address, device.hostname, device.last_seen, owner=unclaim_btn(device.mac_address)) }}
             {%- endfor %}
         </table>

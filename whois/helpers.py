@@ -11,16 +11,12 @@ def filter_hidden(entities):
     return list(filter(lambda e: not e.is_hidden, entities))
 
 
-def count(entities):
-    return len(tuple(entities))
-
-
-def filter_usernames(users):
+def filter_anon_names(users):
     return list(filter(lambda u: not u.is_name_anonymous, users))
 
 
 def unclaimed_devices(devices):
-    return filter(lambda d: d.owner is None, devices)
+    return list(filter(lambda d: d.owner is None, devices))
 
 
 def is_safe_url(target):
