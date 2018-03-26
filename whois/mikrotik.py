@@ -1,32 +1,5 @@
 import re
 from datetime import timedelta
-from urllib.parse import urlparse, urljoin
-
-from flask import request
-
-
-def count_people(devices):
-    pass
-
-
-def list_people(devices):
-    pass
-
-
-def count_esp(devices):
-    pass
-
-
-def count_unclaimed(devices):
-    pass
-
-
-def is_safe_url(target):
-    ref_url = urlparse(request.host_url)
-    test_url = urlparse(urljoin(request.host_url, target))
-    return test_url.scheme in (
-        'http', 'https') and ref_url.netloc == test_url.netloc
-
 
 duration_re = re.compile(
     r'((?P<weeks>\d+?)w)?((?P<days>\d+?)d)?((?P<hours>\d+?)h)?((?P<minutes>\d+?)m)?((?P<seconds>\d+?)s)?')
@@ -57,6 +30,9 @@ def parse_duration(duration_str):
 def parse_mikrotik_data(dt_now, data):
     """
     Returns list of mac address, last seen datetime
+    :param dt_now: datetime pointing to actual time
+    :param data: data from mikrotik
+    :return: list of dicts with keys {"mac_address" "last_seen" "hostname"}
     """
     return [{"mac_address": device['mac'].upper(),
              "last_seen": dt_now - parse_duration(device['last']),

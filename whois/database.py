@@ -89,6 +89,9 @@ class Device(pw.Model):
     class Meta:
         database = db
 
+    def __str__(self):
+        return self.mac_address
+
     @classmethod
     def get_recent(cls, hours=0, minutes=30, seconds=0):
         """

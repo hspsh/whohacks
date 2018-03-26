@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from whois.utility import parse_mikrotik_data, parse_duration
+from whois.mikrotik import parse_mikrotik_data, parse_duration
 
 
 def test_parse_duration():

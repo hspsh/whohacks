@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import json
+import logging
 from datetime import datetime
 
 from flask import Flask, flash, render_template, redirect, url_for, request, \
@@ -9,8 +10,8 @@ from flask_login import LoginManager, login_required, current_user, login_user, 
 
 from whois import settings
 from whois.database import db, Device, User
-from whois.utility import parse_mikrotik_data
-import logging
+from whois.mikrotik import parse_mikrotik_data
+from whois.helpers import owners_from_devices, filter_hidden, unclaimed_devices, filter_usernames, count
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -45,16 +46,16 @@ def index():
     """Serve list of people in hs, show panel for logged users"""
     unclaimed = None
     mine = None
-    recent = Device.get_recent()
-    users = set(
-        [device.owner for device in recent if device.owner is not None])
+    recent = Device.get_recent(**settings.recent_time)
+    users = filter_hidden(owners_from_devices(recent))
+
     if current_user.is_authenticated:
-        unclaimed = [dev for dev in recent if dev.owner is None]
-        mine = [device for device in current_user.devices]
+        unclaimed = unclaimed_devices(recent)
+        mine = current_user.devices
 
     return render_template('index.html',
                            devices={'unclaimed': unclaimed, 'mine': mine},
-                           users=users)
+                           users=filter_usernames(users), headcount=count(users))
 
 
 @app.route('/api/now', methods=['GET'])
@@ -64,17 +65,16 @@ def now_at_space():
     used by other services in HS,
     requests should be from hs3.pl domain or from HSWAN
     """
-    devices = Device.get_recent()
-    users = [device.owner.display_name for device in devices if
-             device.owner is not None]
-    users = set(users)
+    devices = filter_hidden(Device.get_recent(**settings.recent_time))
+    users = filter_hidden(owners_from_devices(devices))
 
-    logger.info('sending request for /api/now')
+    data = {"users": sorted(map(str, filter_usernames(users))),
+            "headcount": count(users),
+            "unknown_devices": count(unclaimed_devices(devices))}
 
-    return jsonify({"users": sorted(users),
-                    "user_count": len(users),
-                    "unknown_devices": len(
-                        [dev for dev in devices if dev.owner is None])})
+    logger.info('sending request for /api/now {}'.format(data))
+
+    return jsonify(data)
 
 
 @app.route('/api/last_seen', methods=['POST'])
@@ -108,7 +108,8 @@ def last_seen_devices():
 
         return 'OK', 200
     else:
-        logger.warning('request from outside whitelist: {}'.format(request.remote_addr))
+        logger.warning(
+            'request from outside whitelist: {}'.format(request.remote_addr))
         return 'NOPE', 403
 
 
@@ -122,7 +123,7 @@ def device(mac_address):
             device.owner = current_user.get_id()
             device.save()
             logger.info(
-                '{} claimed {}'.format(current_user.username, mac_address))
+                '{} claim {}'.format(current_user.username, mac_address))
             flash('Claimed {}!'.format(mac_address), 'alert-success')
 
         elif request.values.get(
@@ -130,7 +131,7 @@ def device(mac_address):
             device.owner = None
             device.save()
             logger.info(
-                '{} claimed {}'.format(current_user.username, mac_address))
+                '{} unclaim {}'.format(current_user.username, mac_address))
             flash('Unclaimed {}!'.format(mac_address), 'alert-info')
         if request.values.get('flags'):
             new_flags = request.form.getlist('flags')
@@ -142,7 +143,8 @@ def device(mac_address):
             device.save()
 
             logger.info(
-                '{} changed {} flags to {}'.format(current_user.username, mac_address, device.flags) )
+                '{} changed {} flags to {}'.format(current_user.username,
+                                                   mac_address, device.flags))
             flash('Flags set'.format(mac_address), 'alert-info')
 
     return render_template('device.html', device=device)
@@ -200,8 +202,8 @@ def login():
 @app.route('/logout')
 @login_required
 def logout():
+    logger.info('logging out: {}'.format(current_user.username))
     logout_user()
-    logger.info('logged out: {}'.format(user.username))
     flash('Logged out.', 'alert-info')
     return redirect(url_for('index'))
 
@@ -213,18 +215,21 @@ def profile_edit():
     if request.method == 'POST':
         if current_user.auth(request.values.get('password', None)) is True:
             try:
-                if request.form['new_password'] is not None and len(request.form['new_password']) > 0:
+                if request.form['new_password'] is not None and len(
+                        request.form['new_password']) > 0:
                     current_user.password = request.form['new_password']
             except Exception as exc:
                 if exc.args[0] == 'too_short':
-                    flash('Password too short, minimum length is 3', 'alert-warning')
+                    flash('Password too short, minimum length is 3',
+                          'alert-warning')
                 else:
-                    print(exc)
+                    logger.error(exc)
             else:
                 current_user.display_name = request.form['display_name']
                 new_flags = request.form.getlist('flags')
                 current_user.is_hidden = 'hidden' in new_flags
-                current_user.is_name_anonymous = 'name_anonymous' in new_flags
+                current_user.is_name_anonymous = 'anonymous for public' in new_flags
+                logger.info('flags: got {} set {:b}'.format(new_flags, current_user.flags))
                 current_user.save()
                 flash('Saved', 'alert-success')
         else:
