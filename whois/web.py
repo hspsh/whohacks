@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+import os
 import json
 import logging
 from datetime import datetime
@@ -14,11 +15,12 @@ from whois.helpers import owners_from_devices, filter_hidden, \
     unclaimed_devices, filter_anon_names
 from whois.mikrotik import parse_mikrotik_data
 
+
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 app = Flask(__name__)
-app.secret_key = settings.secret_key
+app.secret_key = os.environ['SECRET_KEY']
 login_manager = LoginManager()
 login_manager.init_app(app)
 
@@ -36,13 +38,13 @@ def load_user(user_id):
 
 @app.before_request
 def before_request():
-    logging.info('connecting to db')
+    logger.info('connecting to db')
     db.connect()
 
 
 @app.teardown_appcontext
 def after_request(error):
-    logging.info('closing db')
+    logger.info('closing db')
     db.close()
     if error:
         logger.error(error)
@@ -138,11 +140,13 @@ def device(mac_address):
         elif request.values.get('flags'):
             set_device_flags(device, request.form.getlist('flags'))
 
+
     return render_template('device.html', device=device)
 
 
+
 def set_device_flags(device, new_flags):
-    if device.owner.get_id() != current_user.get_id():
+    if device.owner is not None and device.owner.get_id() != current_user.get_id():
         logger.error('no permission for {}'.format(current_user.username))
         flash('No permission!'.format(device.mac_address), 'alert-danger')
         return
@@ -170,7 +174,7 @@ def claim_device(device):
 
 
 def unclaim_device(device):
-    if device.owner.get_id() != current_user.get_id():
+    if device.owner is not None and device.owner.get_id() != current_user.get_id():
         logger.error('no permission for {}'.format(current_user.username))
         flash('No permission!'.format(device.mac_address), 'alert-danger')
         return
@@ -236,8 +240,9 @@ def login():
 @app.route('/logout')
 @login_required
 def logout():
+    username = current_user.username
     logout_user()
-    logger.info('logged out: {}'.format(current_user.username))
+    logger.info('logged out: {}'.format(username))
     flash('Logged out.', 'alert-info')
     return redirect(url_for('index'))
 
