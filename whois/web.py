@@ -31,8 +31,7 @@ def load_user(user_id):
         return User.get_by_id(user_id)
     except User.DoesNotExist as exc:
         logger.error('{}'.format(exc))
-        logger.error('cleanup')
-        logout_user()
+        logger.error('return None')
         return None
 
 
