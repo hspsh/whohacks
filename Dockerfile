@@ -1,11 +1,13 @@
 FROM python:3
 
-COPY ./requirements.txt .
-
 COPY . .
 WORKDIR .
 
-RUN pip install --no-cache-dir -r requirements.txt
-ENV SECRET_KEY chuj
+RUN pip install pipenv
+RUN pipenv install --system
+
+ENV SECRET_KEY dev-key
+VOLUME whoisdevices.db
 CMD ["python", "helpers/db_create.py"]
+
 CMD ["python", "-m", "whois"]
