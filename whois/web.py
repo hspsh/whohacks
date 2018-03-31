@@ -188,7 +188,7 @@ def unclaim_device(device):
 def register():
     """Registration form"""
     if request.method == 'POST':
-        # TODO: WTF forms dla lepszego bezpieczeństwa
+        # TODO: WTF forms for safety
         display_name = request.form['display_name']
         username = request.form['username']
         password = request.form['password']

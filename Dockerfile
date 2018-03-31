@@ -1,13 +1,17 @@
 FROM python:3
+MAINTAINER not7cd "norbert@not7cd.net"
 
-COPY . .
-WORKDIR .
+COPY . /app
+WORKDIR /app
 
 RUN pip install pipenv
 RUN pipenv install --system
 
 ENV SECRET_KEY dev-key
-VOLUME whoisdevices.db
-CMD ["python", "helpers/db_create.py"]
+ENV PYTHONPATH=$PYTHONPATH:/app
 
-CMD ["python", "-m", "whois"]
+VOLUME whoisdevices.db
+RUN python helpers/db_create.py
+
+ENTRYPOINT ["python"]
+CMD ["-m", "whois"]
