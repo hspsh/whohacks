@@ -14,13 +14,16 @@
     </form>
 {% endmacro %}
 
+{% macro user_wiki(user) -%}
+    <a href="//wiki.hs3.pl/ludzie/{{ user.username }}">{{ user.username }}</a>
+{% endmacro %}
 {% macro flag_badge(flag, flag_name) -%}
     {% if flag is sameas True %}
         <span class="badge badge-primary">{{ flag_name }}</span>
     {% endif %}
 {% endmacro %}
 {% macro device_row(device, owner='') -%}
-    <tr>
+    <tr class="justify-content-center">
         <td>
             <a href="/device/{{ device.mac_address }}">{{ device.mac_address }}</a>
         </td>
@@ -45,6 +48,7 @@
     </ul>
     {% if current_user.is_authenticated %}
         <h2>Recent devices</h2>
+        <div class="table-responsive">
         <table class="table">
             {% set header_row -%}
             <tr>
@@ -60,7 +64,7 @@
                 {% if device.owner is none -%}
                     {{ device_row(device, owner=claim_btn(device.mac_address)) }}
                 {% else %}
-                    {{ device_row(device, owner=device.owner) }}
+                    {{ device_row(device, owner=user_wiki(device.owner)) }}
                 {%- endif %}
             {%- endfor %}
             <tr>
@@ -77,6 +81,7 @@
                 {{ device_row(device, owner=unclaim_btn(device.mac_address)) }}
             {%- endfor %}
         </table>
+        </div>
     {% endif %}
 
 {% endblock %}

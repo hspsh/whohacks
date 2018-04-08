@@ -119,6 +119,22 @@ def last_seen_devices():
         return abort(403)
 
 
+def set_device_flags(device, new_flags):
+    if device.owner is not None and device.owner.get_id() != current_user.get_id():
+        logger.error('no permission for {}'.format(current_user.username))
+        flash('No permission!'.format(device.mac_address), 'alert-danger')
+        return
+    device.is_hidden = 'hidden' in new_flags
+    device.is_esp = 'esp' in new_flags
+    device.is_infrastructure = 'infrastructure' in new_flags
+    print(device.flags)
+    device.save()
+    logger.info(
+        '{} changed {} flags to {}'.format(current_user.username,
+                                           device.mac_address, device.flags))
+    flash('Flags set'.format(device.mac_address), 'alert-info')
+
+
 @app.route('/device/<mac_address>', methods=['GET', 'POST'])
 @login_required
 def device(mac_address):
@@ -141,22 +157,6 @@ def device(mac_address):
             set_device_flags(device, request.form.getlist('flags'))
 
     return render_template('device.html', device=device)
-
-
-def set_device_flags(device, new_flags):
-    if device.owner is not None and device.owner.get_id() != current_user.get_id():
-        logger.error('no permission for {}'.format(current_user.username))
-        flash('No permission!'.format(device.mac_address), 'alert-danger')
-        return
-    device.is_hidden = 'hidden' in new_flags
-    device.is_esp = 'esp' in new_flags
-    device.is_infrastructure = 'infrastructure' in new_flags
-    print(device.flags)
-    device.save()
-    logger.info(
-        '{} changed {} flags to {}'.format(current_user.username,
-                                           device.mac_address, device.flags))
-    flash('Flags set'.format(device.mac_address), 'alert-info')
 
 
 def claim_device(device):
