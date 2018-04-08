@@ -1,3 +1,4 @@
+# from datetime import datetime
 from whois.database import db, Device, User
 
 db.connect()

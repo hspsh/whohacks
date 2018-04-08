@@ -1,7 +1,7 @@
 #!/usr/bin/python3
-import os
 import json
 import logging
+import os
 from datetime import datetime
 
 from flask import Flask, flash, render_template, redirect, url_for, request, \
@@ -14,7 +14,6 @@ from whois.database import db, Device, User
 from whois.helpers import owners_from_devices, filter_hidden, \
     unclaimed_devices, filter_anon_names
 from whois.mikrotik import parse_mikrotik_data
-
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -53,13 +52,15 @@ def after_request(error):
 def index():
     """Serve list of people in hs, show panel for logged users"""
     recent = Device.get_recent(**settings.recent_time)
-    users = filter_hidden(owners_from_devices(recent))
+    visible_devices = filter_hidden(recent)
+    users = filter_hidden(owners_from_devices(visible_devices))
 
     if current_user.is_authenticated:
         unclaimed = unclaimed_devices(recent)
         mine = current_user.devices
         return render_template('index.html', unclaimed=unclaimed,
-                               my_devices=mine, users=filter_anon_names(users),
+                               recent=recent, my_devices=mine,
+                               users=filter_anon_names(users),
                                headcount=len(users))
 
     return render_template('index.html', users=filter_anon_names(users),
@@ -139,9 +140,7 @@ def device(mac_address):
         elif request.values.get('flags'):
             set_device_flags(device, request.form.getlist('flags'))
 
-
     return render_template('device.html', device=device)
-
 
 
 def set_device_flags(device, new_flags):

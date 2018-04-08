@@ -13,16 +13,24 @@
         </button>
     </form>
 {% endmacro %}
-{% macro device_row(mac_address, hostname, last_seen, owner) -%}
+
+{% macro flag_badge(flag, flag_name) -%}
+    {% if flag is sameas True %}
+        <span class="badge badge-primary">{{ flag_name }}</span>
+    {% endif %}
+{% endmacro %}
+{% macro device_row(device, owner='') -%}
     <tr>
         <td>
-            <a href="/device/{{ mac_address }}">{{ mac_address }}</a>
+            <a href="/device/{{ device.mac_address }}">{{ device.mac_address }}</a>
         </td>
-        <td>{{ hostname }}</td>
+        <td>{{ device.hostname }}</td>
+        <td>{{ flag_badge(device.is_hidden, 'hidden') }}{{ flag_badge(device.is_esp, 'esp') }}{{ flag_badge(device.is_infrastructure, 'infrastructure') }}</td>
         <td>{{ owner }}</td>
-        <td>{{ last_seen.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+        <td>{{ device.last_seen.strftime('%Y-%m-%d %H:%M:%S') }}</td>
     </tr>
 {%- endmacro %}
+
 
 {% block content %}
     <h2>Status</h2>
@@ -36,19 +44,24 @@
         {% endfor %}
     </ul>
     {% if current_user.is_authenticated %}
-        <h2>Recent unclaimed devices</h2>
+        <h2>Recent devices</h2>
         <table class="table">
             {% set header_row -%}
             <tr>
                 <th>MAC</th>
                 <th>hostname</th>
+                <th>flags</th>
                 <th>ownership</th>
                 <th>last seen</th>
             </tr>
             {%- endset %}
             {{ header_row }}
-            {% for device in unclaimed -%}
-                {{ device_row(device.mac_address, device.hostname, device.last_seen,owner=claim_btn(device.mac_address)) }}
+            {% for device in recent -%}
+                {% if device.owner is none %}
+                    {{ device_row(device, owner=claim_btn(device.mac_address)) }}
+                {% else %}
+                    {{ device_row(device, owner=device.owner) }}
+                {% endif %}
             {%- endfor %}
             <tr>
                 <th>
@@ -57,10 +70,11 @@
                 <th></th>
                 <th></th>
                 <th></th>
+                <th></th>
             </tr>
             {{ header_row }}
             {% for device in my_devices -%}
-                {{ device_row(device.mac_address, device.hostname, device.last_seen, owner=unclaim_btn(device.mac_address)) }}
+                {{ device_row(device, owner=unclaim_btn(device.mac_address)) }}
             {%- endfor %}
         </table>
     {% endif %}
