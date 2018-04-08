@@ -15,6 +15,8 @@ from whois.helpers import owners_from_devices, filter_hidden, \
     unclaimed_devices, filter_anon_names
 from whois.mikrotik import parse_mikrotik_data
 
+IP_MASK = '192.168.88.1-255'
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -34,10 +36,26 @@ def load_user(user_id):
         return None
 
 
+# TODO: taken from SO
+def ip_range(mask, addr):
+    splitted_ip = addr.split('.')
+    for index, current_range in enumerate(mask.split('.')):
+        if '-' in current_range:
+            mini, maxi = map(int,current_range.split('-'))
+        else:
+            mini = maxi = int(current_range)
+        if not (mini <= int(splitted_ip[index]) <= maxi):
+            return False
+    return True
+
+
 @app.before_request
 def before_request():
     logger.info('connecting to db')
     db.connect()
+    if not ip_range(IP_MASK, request.remote_addr):
+        flash('Outside local network, some functions forbidden!',
+              'alert-warning')
 
 
 @app.teardown_appcontext
@@ -135,25 +153,12 @@ def set_device_flags(device, new_flags):
     flash('Flags set'.format(device.mac_address), 'alert-info')
 
 
-# TODO: taken from SO
-def ip_range(mask, addr):
-    splitted_ip = addr.split('.')
-    for index, current_range in enumerate(mask.split('.')):
-        if '-' in current_range:
-            mini, maxi = map(int,current_range.split('-'))
-        else:
-            mini = maxi = int(current_range)
-        if not (mini <= int(splitted_ip[index]) <= maxi):
-            return False
-    return True
-
-
 @app.route('/device/<mac_address>', methods=['GET', 'POST'])
 @login_required
 def device(mac_address):
     """Get info about device, claim device, release device"""
     # TODO: dirty hack
-    if not ip_range('192.168.88.1-255', request.remote_addr):
+    if not ip_range(IP_MASK, request.remote_addr):
         logger.error('{} request from outside'.format(request.remote_addr))
         abort(403)
     else:
