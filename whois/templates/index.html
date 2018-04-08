@@ -57,11 +57,11 @@
             {%- endset %}
             {{ header_row }}
             {% for device in recent -%}
-                {% if device.owner is none %}
+                {% if device.owner is none -%}
                     {{ device_row(device, owner=claim_btn(device.mac_address)) }}
                 {% else %}
                     {{ device_row(device, owner=device.owner) }}
-                {% endif %}
+                {%- endif %}
             {%- endfor %}
             <tr>
                 <th>
