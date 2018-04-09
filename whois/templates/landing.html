@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="card-columns">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <span style="font-size: 3rem">{{ headcount }} osoby</span><br>
+                w Hackerspace
+            </div>
+        </div>
+        {% if headcount == 1 %}
+            <div class="card">
+                <img class="card-img" src="https://i.imgur.com/KFicjPn.jpg"
+                     alt="">
+            </div>
+        {% endif %}
+        {% if unknowncount > 0 %}
+            <div class="card text-black border-primary">
+                <div class="card-body">
+                    <span style="font-size: 1.6rem">{{ unknowncount | default(0) }} nieznanych urządzeń</span><br>
+                    <a class="btn btn-outline-primary" href="/login">Zajmij
+                        je</a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

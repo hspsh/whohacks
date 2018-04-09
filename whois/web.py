@@ -81,8 +81,9 @@ def index():
                                users=filter_anon_names(users),
                                headcount=len(users))
 
-    return render_template('index.html', users=filter_anon_names(users),
-                           headcount=len(users))
+    return render_template('landing.html', users=filter_anon_names(users),
+                           headcount=len(users),
+                           unknowncount=len(unclaimed_devices(recent)))
 
 
 @app.route('/api/now', methods=['GET'])
