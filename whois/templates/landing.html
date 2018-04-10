@@ -22,5 +22,20 @@
                 </div>
             </div>
         {% endif %}
+        {% if headcount == 0 %}
+            <div class="card text-black border-dark">
+{#                <div class="card-header">#}
+{#                    Na miejscu#}
+{#                </div>#}
+                <div class="card-body">
+                    <ul class="list-group">
+                        {% for user in users %}
+                            <li class="list-group-item">@{{ user }}</li>
+                            <li>alo</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        {% endif %}
     </div>
 {% endblock %}
