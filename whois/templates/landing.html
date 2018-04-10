@@ -3,7 +3,8 @@
     <div class="card-columns">
         <div class="card text-white bg-primary">
             <div class="card-body">
-                <span style="font-size: 3rem">{{ headcount }} osoby</span><br>
+
+                <span style="font-size: 3rem">{{ headcount }} {{ {0:'osób', 1:'osoba', 2:'osoby', 3:'osoby', 4:'osoby'}|attr(headcount)|default('osób') }}</span><br>
                 w Hackerspace
             </div>
         </div>
@@ -23,7 +24,7 @@
             </div>
         {% endif %}
         {% if headcount > 0 %}
-            <div class="card text-black border-dark">
+            <div class="card text-black">
 {#                <div class="card-header">#}
 {#                    Na miejscu#}
 {#                </div>#}
@@ -34,5 +35,10 @@
                     </ul>
             </div>
         {% endif %}
+        <div class="card text-black">
+            <div class="card-body">
+                Komenda na Slacku <kbd>/ktohakuje</kbd>
+            </div>
+        </div>
     </div>
 {% endblock %}
