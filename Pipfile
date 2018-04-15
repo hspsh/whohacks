@@ -10,11 +10,11 @@ name = "pypi"
 "pytest-pep8" = "*"
 pytest = "*"
 freezegun = "*"
-gunicorn = "*"
 
 
 [packages]
 
+gunicorn = "*"
 attrs = "==17.4.0"
 click = "==6.7"
 flask = "*"

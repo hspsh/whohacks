@@ -7,4 +7,4 @@ ENV SECRET_KEY dev-key
 ENV PYTHONPATH=/app
 ENV DB_PATH=/data/whoisdevices.db
 
-CMD python3 -m whois
+CMD gunicorn whois.web:app

@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "591c67ce1e4a10729333ba99977b0c5a46e69cdad15d4604565a79a729fc053a"
+            "sha256": "1c57e603501ab29702cdbd23465efc6c3cfb436b7d5c8e9ab8bc2a08877bd7dd"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -43,6 +43,13 @@
             ],
             "version": "==0.4.1"
         },
+        "gunicorn": {
+            "hashes": [
+                "sha256:75af03c99389535f218cc596c7de74df4763803f7b63eb09d77e92b3956b36c6",
+                "sha256:eee1169f0ca667be05db3351a0960765620dad53f53434262ff8901b68a1b622"
+            ],
+            "version": "==19.7.1"
+        },
         "itsdangerous": {
             "hashes": [
                 "sha256:cbb3fcf8d3e33df861709ecaf89d9e6629cff0a217bc2848f1b41cd30d360519"
@@ -64,9 +71,9 @@
         },
         "peewee": {
             "hashes": [
-                "sha256:34000900eedfcce5a38eb84d8d197f41a537e10a36419aba0c407215dd87afeb"
+                "sha256:e31771a5a18576336eaf7883d1b4bfd9478d0af02ff5a8f932ec1c5ef56ca7e5"
             ],
-            "version": "==3.2.0"
+            "version": "==3.2.2"
         },
         "pluggy": {
             "hashes": [
@@ -147,13 +154,6 @@
             ],
             "markers": "python_version < '3.0'",
             "version": "==1.0.2"
-        },
-        "gunicorn": {
-            "hashes": [
-                "sha256:75af03c99389535f218cc596c7de74df4763803f7b63eb09d77e92b3956b36c6",
-                "sha256:eee1169f0ca667be05db3351a0960765620dad53f53434262ff8901b68a1b622"
-            ],
-            "version": "==19.7.1"
         },
         "more-itertools": {
             "hashes": [

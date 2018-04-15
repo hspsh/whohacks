@@ -4,7 +4,7 @@
         <div class="card text-white bg-primary">
             <div class="card-body">
 
-                <span style="font-size: 3rem">{{ headcount }} {{ {0:'osób', 1:'osoba', 2:'osoby', 3:'osoby', 4:'osoby'}|attr(headcount)|default('osób') }}</span><br>
+                <span style="font-size: 3rem">{{ headcount }} {{ {0:'osób', 1:'osoba', 2:'osoby', 3:'osoby', 4:'osoby'}[headcount]|default('osób') }}</span><br>
                 w Hackerspace
             </div>
         </div>
