@@ -120,4 +120,5 @@ class Device(pw.Model):
                              last_seen=last_seen)
 
         res.last_seen = last_seen
+        res.hostname = hostname
         res.save()
