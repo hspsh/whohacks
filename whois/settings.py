@@ -7,5 +7,5 @@ device_flags = {1: 'hidden', 2: 'new', 4: 'infrastructure', 8: 'esp',
                 16: 'laptop'}
 
 recent_time = {
-    # 'hours': 20
+    'minutes': 20
 }
