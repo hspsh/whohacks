@@ -40,7 +40,7 @@ docker run -v whois-db:/data -p 5000:5000 whois:latest
 
 ### Envvars
 
-`SECRET_KEY`
+`SECRET_KEY` - acutally we don't know what the fuck this is for... ask @not7cd for details
 
 ### Finding the database contents
 
