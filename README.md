@@ -32,11 +32,33 @@ _ Because why not _
 docker volume create --name whois-db
 docker build . -t 'whois'
 docker run -v whois-db:/data -p 5000:5000 whois:latest python3 helpers/db_create.py
-docker run -v whois-db:/data -p 5000:5000 whois:latest
+docker run -v whois-db:/data -v /etc/localtime:/etc/localtime:ro -p 5000:5000 whois:latest
 ```
+
+### Caution
+
+This: `-v /etc/localtime:/etc/localtime:ro` is required to match the timezone in the container to timezone of the host
+
 ### Docker compose
 
-`docker-compose up`
+Sample:
+
+```yaml
+version: '2'
+services:
+	whois-web:
+		image: allgreed/whois
+		restart: always
+		ports:
+			- "8000:8000"
+		volumes:
+			- whois-db:/data
+			# sync timezone with host
+			- /etc/localtime:/etc/localtime:ro
+
+volumes:
+	whois-db:
+```
 
 ### Envvars
 
