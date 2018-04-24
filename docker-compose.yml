@@ -1,0 +1,12 @@
+version: '2'
+services:
+  whois-web:
+    build: .
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - whois-db:/data
+
+volumes:
+  whois-db:
