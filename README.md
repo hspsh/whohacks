@@ -34,6 +34,9 @@ docker build . -t 'whois'
 docker run -v whois-db:/data -p 5000:5000 whois:latest python3 helpers/db_create.py
 docker run -v whois-db:/data -p 5000:5000 whois:latest
 ```
+### Docker compose
+
+`docker-compose up`
 
 ### Envvars
 
@@ -43,3 +46,4 @@ docker run -v whois-db:/data -p 5000:5000 whois:latest
 
 Look for mountpoint via `docker inspect whois-db`
 
+If you'd like to migrate from a previously running instance please copy the contents of db into current Docker volume
