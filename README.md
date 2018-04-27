@@ -46,23 +46,23 @@ Sample:
 ```yaml
 version: '2'
 services:
-	whois-web:
-		image: allgreed/whois
-		restart: always
-		ports:
-			- "8000:8000"
-		volumes:
-			- whois-db:/data
-			# sync timezone with host
-			- /etc/localtime:/etc/localtime:ro
+  whois-web:
+    image: allgreed/whois
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - whois-db:/data
+    # sync timezone with host
+      - /etc/localtime:/etc/localtime:ro
 
 volumes:
-	whois-db:
+  whois-db:
 ```
 
 ### Envvars
 
-`SECRET_KEY` - acutally we don't know what the fuck this is for... ask @not7cd for details
+`SECRET_KEY` in .env
 
 ### Finding the database contents
 
