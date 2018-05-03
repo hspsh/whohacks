@@ -30,7 +30,7 @@ pipenv run python -m whois
 ```bash
 docker-compose build
 # first run, later it should just connect to existing db
-docker run -v whois_db:/data whois_web python3 helpers/db_create.py
+docker-compose run web python3 helpers/db_create.py
 docker-compose up
 ```
 
