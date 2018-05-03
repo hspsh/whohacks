@@ -1,4 +1,5 @@
 # whois @ HS3C
+![build](https://travis-ci.com/hs3city/whois.svg?branch=master)
 
 ## Prerequisities
 
