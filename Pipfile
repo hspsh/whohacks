@@ -14,7 +14,7 @@ freezegun = "*"
 
 [packages]
 
-gunicorn = "*"
+gunicorn = "==19.7.1"
 attrs = "==17.4.0"
 click = "==6.7"
 flask = "*"

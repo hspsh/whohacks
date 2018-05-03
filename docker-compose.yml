@@ -1,13 +1,14 @@
 version: '2'
 services:
-  whois-web:
-    image: allgreed/whois
+  web:
+    build: .
     restart: always
     ports:
       # use 127.0.0.1:8000:8000
       - "8000:8000"
     volumes:
-      - whois-db:/data
+      - db:/data
+      - /etc/localtime:/etc/localtime:ro
 
 volumes:
-  whois-db:
+  db:

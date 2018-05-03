@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "1c57e603501ab29702cdbd23465efc6c3cfb436b7d5c8e9ab8bc2a08877bd7dd"
+            "sha256": "9b95e4dc1e4560f8d7b1d5faef54d362e8f39da30fa4124ab38bb54eb915a201"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -32,10 +32,10 @@
         },
         "flask": {
             "hashes": [
-                "sha256:0749df235e3ff61ac108f69ac178c9770caeaccad2509cb762ce1f65570a8856",
-                "sha256:49f44461237b69ecd901cc7ce66feea0319b9158743dd27a2899962ab214dac1"
+                "sha256:2271c0070dbcb5275fad4a82e29f23ab92682dc45f9dfbc22c02ba9b9322ce48",
+                "sha256:a080b744b7e345ccfcbc77954861cb05b3c63786e93f2b3875e0913d44b43f05"
             ],
-            "version": "==0.12.2"
+            "version": "==1.0.2"
         },
         "flask-login": {
             "hashes": [
@@ -71,9 +71,9 @@
         },
         "peewee": {
             "hashes": [
-                "sha256:2dc2895d5ef6680e3f27926740e0d1679ca946d8705a5a51f7145c05c2d9556e"
+                "sha256:518375df27e0209081c2794b4f562cc632402c169047ef594827da1647f585ce"
             ],
-            "version": "==3.2.5"
+            "version": "==3.3.3"
         },
         "pluggy": {
             "hashes": [
@@ -189,10 +189,10 @@
         },
         "pytest": {
             "hashes": [
-                "sha256:6266f87ab64692112e5477eba395cfedda53b1933ccd29478e671e73b420c19c",
-                "sha256:fae491d1874f199537fd5872b5e1f0e74a009b979df9d53d1553fd03da1703e1"
+                "sha256:54713b26c97538db6ff0703a12b19aeaeb60b5e599de542e7fca0ec83b9038e8",
+                "sha256:829230122facf05a5f81a6d4dfe6454a04978ea3746853b2b84567ecf8e5c526"
             ],
-            "version": "==3.5.0"
+            "version": "==3.5.1"
         },
         "pytest-cache": {
             "hashes": [
