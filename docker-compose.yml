@@ -4,7 +4,8 @@ services:
     image: allgreed/whois
     restart: always
     ports:
-      - "80:8000"
+      # use 127.0.0.1:8000:8000
+      - "8000:8000"
     volumes:
       - whois-db:/data
 
