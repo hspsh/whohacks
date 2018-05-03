@@ -4,7 +4,7 @@ python:
 # command to install dependencies
 install:
   - pip install pipenv
-  - pip install -r requirements.txt
+  - pipenv install --dev
 # command to run tests
 script:
   - pipenv run pytest tests
