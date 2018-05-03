@@ -9,4 +9,5 @@ device_flags = {1: 'hidden', 2: 'new', 4: 'infrastructure', 8: 'esp',
 recent_time = {
     'minutes': 20
 }
+
 ip_mask = '192.168.88.1-255'
