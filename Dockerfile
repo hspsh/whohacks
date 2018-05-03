@@ -8,7 +8,6 @@ COPY requirements.txt /tmp
 RUN pip3 install -r /tmp/requirements.txt --no-cache-dir 
 COPY . /service/app
 
-ENV SECRET_KEY dev-key
 ENV PYTHONPATH /service/app
 ENV DB_PATH /data/whoisdevices.db
 
