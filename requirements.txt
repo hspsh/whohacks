@@ -12,9 +12,6 @@ peewee==3.1.5
 pep8==1.7.1
 pluggy==0.6.0
 py==1.5.2
-pytest==3.4.2
-pytest-cache==1.0
-pytest-pep8==1.0.6
 python-dateutil==2.6.1
 six==1.11.0
 Werkzeug==0.14.1
