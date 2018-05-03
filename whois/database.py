@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 import peewee as pw
 from werkzeug.security import check_password_hash, generate_password_hash
 
-
 db = pw.SqliteDatabase(os.environ.get('DB_PATH', 'whoisdevices.db'))
 
 
@@ -17,7 +16,6 @@ class User(pw.Model):
 
     is_hidden = flags.flag(1)
     is_name_anonymous = flags.flag(2)
-
 
     class Meta:
         database = db
@@ -32,7 +30,8 @@ class User(pw.Model):
         :return: user instance
         """
         # TODO: ehh
-        user = cls.create(username=username, _password='todo', display_name=display_name)
+        user = cls.create(username=username, _password='todo',
+                          display_name=display_name)
         user.password = password
         return user
 
@@ -114,8 +113,8 @@ class Device(pw.Model):
     def update_or_create(cls, mac_address, last_seen, hostname=None):
         try:
             res = cls.get(cls.mac_address == mac_address)
-        # TODO exception
-        except:
+        # TODO: narrow Error
+        except pw.PeeweeException:
             res = cls.create(mac_address=mac_address, hostname=hostname,
                              last_seen=last_seen)
 

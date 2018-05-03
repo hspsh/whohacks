@@ -3,6 +3,7 @@ from functools import wraps
 from urllib.parse import urlparse, urljoin
 
 from flask import request, abort
+
 from whois.settings import ip_mask
 
 logging.basicConfig(level=logging.INFO)

@@ -7,9 +7,9 @@ name = "pypi"
 
 [dev-packages]
 
-"pytest-pep8" = "*"
 pytest = "*"
 freezegun = "*"
+"flake8" = "*"
 
 
 [packages]
@@ -17,16 +17,16 @@ freezegun = "*"
 gunicorn = "*"
 attrs = "==17.4.0"
 click = "==6.7"
-flask = "*"
-flask-login = "*"
+Flask = "*"
+Flask-Login = "*"
 itsdangerous = "==0.24"
-"jinja2" = "==2.10"
-markupsafe = "==1.0"
+"Jinja2" = "==2.10"
+MarkupSafe = "==1.0"
 pluggy = "==0.6.0"
 py = "==1.5.2"
 python-dateutil = "==2.6.1"
 six = "==1.11.0"
-werkzeug = "==0.14.1"
+Werkzeug = "==0.14.1"
 peewee = "*"
 
 
