@@ -11,4 +11,4 @@ RUN mkdir /data && chown nobody:nogroup /data
 
 EXPOSE 8000
 USER nobody
-CMD gunicorn whois.web:app -b 0.0.0.0:8000
+CMD ["gunicorn", "whois.web:app", "-b 0.0.0.0:8000"]
