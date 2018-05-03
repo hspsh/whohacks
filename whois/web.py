@@ -3,7 +3,6 @@ import json
 import logging
 import os
 from datetime import datetime
-from functools import wraps
 
 from flask import Flask, flash, render_template, redirect, url_for, request, \
     jsonify, abort
@@ -13,10 +12,8 @@ from flask_login import LoginManager, login_required, current_user, login_user, 
 from whois import settings
 from whois.database import db, Device, User
 from whois.helpers import owners_from_devices, filter_hidden, \
-    unclaimed_devices, filter_anon_names
+    unclaimed_devices, filter_anon_names, ip_range, in_space_required
 from whois.mikrotik import parse_mikrotik_data
-
-IP_MASK = '192.168.88.1-255'
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -37,42 +34,11 @@ def load_user(user_id):
         return None
 
 
-# TODO: taken from SO
-def ip_range(mask, addr):
-    splitted_ip = addr.split('.')
-    for index, current_range in enumerate(mask.split('.')):
-        if '-' in current_range:
-            mini, maxi = map(int, current_range.split('-'))
-        else:
-            mini = maxi = int(current_range)
-        if not (mini <= int(splitted_ip[index]) <= maxi):
-            return False
-    return True
-
-
-def in_space_required():
-    def decorator(f):
-        @wraps(f)
-        def func(*a, **kw):
-            if not ip_range(IP_MASK, request.remote_addr):
-                logger.error(
-                    '{} request from outside'.format(request.remote_addr))
-                abort(403)
-            else:
-                logger.info(
-                    '{} is in allowed ip range'.format(request.remote_addr))
-                return f(*a, **kw)
-
-        return func
-
-    return decorator
-
-
 @app.before_request
 def before_request():
     logger.info('connecting to db')
     db.connect()
-    if not ip_range(IP_MASK, request.remote_addr):
+    if not ip_range(settings.ip_mask, request.remote_addr):
         flash('Outside local network, some functions forbidden!',
               'alert-warning')
 
