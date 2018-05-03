@@ -63,7 +63,7 @@ volumes:
 
 ### Envvars
 
-`SECRET_KEY` in .env
+[`SECRET_KEY`](https://stackoverflow.com/questions/22463939/demystify-flask-app-secret-key#22463969) in .env
 
 ### Finding the database contents
 
