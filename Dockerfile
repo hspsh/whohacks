@@ -1,18 +1,16 @@
-FROM python:3-stretch AS build
-MAINTAINER not7cd "norbert@not7cd.net"
-MAINTAINER allgreed "olgierd@kasprowicz.pro"
+FROM kennethreitz/pipenv
 
-RUN pip3 install gunicorn==19.7.1 --no-cache-dir 
-
-COPY requirements.txt /tmp
-RUN pip3 install -r /tmp/requirements.txt --no-cache-dir 
-COPY . /service/app
-
-ENV PYTHONPATH /service/app
+#default config
+ENV SECRET_KEY secret
+ENV PYTHONPATH /app
 ENV DB_PATH /data/whoisdevices.db
-RUN mkdir /data && chown nobody:nogroup /data
 
-WORKDIR /service
-EXPOSE 8000
+COPY . /app
+
+RUN mkdir /data && chown nobody /data
 USER nobody
-CMD gunicorn whois.web:app -b 0.0.0.0:8000
+
+EXPOSE 8000
+VOLUME ["/data"]
+
+CMD ["gunicorn", "whois.web:app", "-b 0.0.0.0:8000"]

@@ -1,13 +1,18 @@
 version: '2'
 services:
-  whois-web:
-    image: allgreed/whois
-    restart: always
+  web:
+    build: .
+    environment:
+      # you should change secret key
+      - SECRET_KEY=secret
+      - DB_PATH=/data/whoisdevices.db
     ports:
       # use 127.0.0.1:8000:8000
       - "8000:8000"
     volumes:
-      - whois-db:/data
+      - database:/data
+      - /etc/localtime:/etc/localtime:ro
+    restart: always
 
 volumes:
-  whois-db:
+  database:
