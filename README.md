@@ -47,17 +47,20 @@ version: '2'
 services:
   web:
     build: .
-    restart: always
+    environment:
+      # you should change secret key
+      - SECRET_KEY=secret
+      - DB_PATH=/data/whoisdevices.db
     ports:
-      # use 127.0.0.1:8000:8000 when using VirtualHost
+      # use 127.0.0.1:8000:8000
       - "8000:8000"
     volumes:
-      - db:/data
-      # sync timezone with host
+      - database:/data
       - /etc/localtime:/etc/localtime:ro
+    restart: always
 
 volumes:
-  db:
+  database:
 
 ```
 
