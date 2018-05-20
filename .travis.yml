@@ -1,11 +1,17 @@
 language: python
 python:
   - "3.6"
-# command to install dependencies
+
+services:
+  - docker
+
 install:
   - pip install pipenv
   - pipenv install --dev
-# command to run tests
+  - docker build -t whois .
+  - docker run -d -p 127.0.0.1:8000:8000 --name whois whois
+
 script:
+  - docker ps | grep -q whois
   - pipenv run pytest tests
   - pipenv run flake8 --ignore=E501,F401,E128,E402,E731,F821 whois
