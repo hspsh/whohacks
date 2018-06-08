@@ -2,7 +2,8 @@ import re
 from datetime import timedelta
 
 duration_re = re.compile(
-    r'((?P<weeks>\d+?)w)?((?P<days>\d+?)d)?((?P<hours>\d+?)h)?((?P<minutes>\d+?)m)?((?P<seconds>\d+?)s)?')
+    r"((?P<weeks>\d+?)w)?((?P<days>\d+?)d)?((?P<hours>\d+?)h)?((?P<minutes>\d+?)m)?((?P<seconds>\d+?)s)?"
+)
 
 
 def parse_duration(duration_str):
@@ -20,9 +21,8 @@ def parse_duration(duration_str):
         if param:
             time_params[name] = int(param)
 
-    time_params['days'] = time_params.get('days', 0) + 7 * time_params.get(
-        'weeks', 0)
-    time_params.pop('weeks', None)
+    time_params["days"] = time_params.get("days", 0) + 7 * time_params.get("weeks", 0)
+    time_params.pop("weeks", None)
 
     return timedelta(**time_params)
 
@@ -34,6 +34,11 @@ def parse_mikrotik_data(dt_now, data):
     :param data: data from mikrotik
     :return: list of dicts with keys {"mac_address" "last_seen" "hostname"}
     """
-    return [{"mac_address": device['mac'].upper(),
-             "last_seen": dt_now - parse_duration(device['last']),
-             "hostname": device['name']} for device in data]
+    return [
+        {
+            "mac_address": device["mac"].upper(),
+            "last_seen": dt_now - parse_duration(device["last"]),
+            "hostname": device["name"],
+        }
+        for device in data
+    ]

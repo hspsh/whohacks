@@ -1,19 +1,15 @@
 [[source]]
-
 url = "https://pypi.python.org/simple"
 verify_ssl = true
 name = "pypi"
 
-
 [dev-packages]
-
 pytest = "*"
 freezegun = "*"
 "flake8" = "*"
-
+black = "*"
 
 [packages]
-
 gunicorn = "==19.7.1"
 attrs = "==17.4.0"
 click = "==6.7"
@@ -29,7 +25,5 @@ six = "==1.11.0"
 Werkzeug = "==0.14.1"
 peewee = "*"
 
-
 [requires]
-
 python_version = "3.6"

@@ -28,16 +28,15 @@ def unclaimed_devices(devices):
 def is_safe_url(target):
     ref_url = urlparse(request.host_url)
     test_url = urlparse(urljoin(request.host_url, target))
-    return test_url.scheme in (
-        'http', 'https') and ref_url.netloc == test_url.netloc
+    return test_url.scheme in ("http", "https") and ref_url.netloc == test_url.netloc
 
 
 # TODO: taken from SO
 def ip_range(mask, address):
-    ip_parts = address.split('.')
-    for index, current_range in enumerate(mask.split('.')):
-        if '-' in current_range:
-            mini, maxi = map(int, current_range.split('-'))
+    ip_parts = address.split(".")
+    for index, current_range in enumerate(mask.split(".")):
+        if "-" in current_range:
+            mini, maxi = map(int, current_range.split("-"))
         else:
             mini = maxi = int(current_range)
         if not (mini <= int(ip_parts[index]) <= maxi):
@@ -50,12 +49,10 @@ def in_space_required():
         @wraps(f)
         def func(*a, **kw):
             if not ip_range(ip_mask, request.remote_addr):
-                logger.error(
-                    '{} request from outside'.format(request.remote_addr))
+                logger.error("{} request from outside".format(request.remote_addr))
                 abort(403)
             else:
-                logger.info(
-                    '{} is in allowed ip range'.format(request.remote_addr))
+                logger.info("{} is in allowed ip range".format(request.remote_addr))
                 return f(*a, **kw)
 
         return func
