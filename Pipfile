@@ -11,18 +11,9 @@ black = "*"
 
 [packages]
 gunicorn = "==19.7.1"
-attrs = "==17.4.0"
-click = "==6.7"
 Flask = "*"
 Flask-Login = "*"
-itsdangerous = "==0.24"
-"Jinja2" = "==2.10"
-MarkupSafe = "==1.0"
-pluggy = "==0.6.0"
-py = "==1.5.2"
-python-dateutil = "==2.6.1"
-six = "==1.11.0"
-Werkzeug = "==0.14.1"
+python-dateutil = "*"
 peewee = "*"
 
 [requires]
