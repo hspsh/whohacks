@@ -1,0 +1,29 @@
+# Get DHCP leases records and send selected fields (MAC ADDRESS, HOST NAME, LAST SEEN and STATUS) to a webservice via POST.
+:put "Get DHCP leases";
+:local leases "";
+:foreach i in=[/ip dhcp-server lease find] do={ 
+  :local dhcp [/ip dhcp-server lease get $i] 
+  :local client "\"mac\":\"$($dhcp->"active-mac-address")\",\"name\":\"$($dhcp->"host-name")\",\"last\":\"$($dhcp->"last-seen")\",\"status\":\"$($dhcp->"status")\"";
+  :set $leases ($leases, $client);
+}
+:local json "[";
+:local first true;
+:foreach k,v in $leases do={
+  if ([:len $v] > 0) do={
+    if ($first = true) do={
+     :set $json ($json .  "{" . $v . "}");
+    } else={
+      :set $json ($json . ",{" .  $v . "}");
+    };
+    :set $first false;
+  }
+}
+:set $json ($json."]");
+:local data ("data=" . $json);
+:do {
+  :put "Send DHCP leases";
+  /tool fetch mode=http url="http://webservice" keep-result=yes dst-path="sendleases.txt" http-method="post" http-data=$data;
+} on-error={
+  :put "Send DHCP leases failed!";
+  log warning "Send DHCP leases failed!";
+}
