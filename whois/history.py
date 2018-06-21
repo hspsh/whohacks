@@ -1,3 +1,4 @@
+import logging
 import atexit
 from datetime import datetime
 
@@ -6,13 +7,18 @@ from whois.settings import log_frequency_time
 from whois.database import History, Device
 from whois.helpers import owners_from_devices, filter_hidden, unclaimed_devices
 
+logger = logging.getLogger(__name__)
 
+logger.info("Created BackgroundScheduler")
 cron = Scheduler(daemon=True)
 cron.start()
 
 
 @cron.scheduled_job(**log_frequency_time)
 def log_presence():
+    logger = logging.getLogger(__name__)
+    logger.info("logging presence to history")
+
     now = datetime.now()
     recent = Device.get_recent(**log_frequency_time)
     visible_devices = filter_hidden(recent)
