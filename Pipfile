@@ -19,6 +19,7 @@ Flask = "*"
 Flask-Login = "*"
 python-dateutil = "*"
 peewee = "*"
+apscheduler = "*"
 
 [requires]
 python_version = "3.6"

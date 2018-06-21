@@ -6,6 +6,7 @@ user_flags = {1: "hidden", 2: "name_anonymous"}
 device_flags = {1: "hidden", 2: "new", 4: "infrastructure", 8: "esp", 16: "laptop"}
 
 recent_time = {"minutes": 20}
+log_frequency_time = {"hours": 1, "minutes": 0, "seconds": 0}
 
 # production
 ip_mask = "192.168.88.1-255"
