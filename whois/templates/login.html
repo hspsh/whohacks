@@ -7,7 +7,7 @@
 {% block content %}
 <div class="card mx-auto" style="width: 18rem;">
   <div class="card-body">
-
+    {% block card %}
     <h2>Please login</h2>
       <br>
     <form action="" method="post">
@@ -20,8 +20,9 @@
         <div class="form-group">
       <input class="btn btn-primary btn-block" type="submit" value="Login">
         </div>
-        <a href="/register" class="card-link">Register</a>
     </form>
+    <a href="/register" class="card-link">Don't have account? <b>Register</b></a>
+    {% endblock %}
   </div>
 </div>
 {% endblock %}

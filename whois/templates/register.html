@@ -1,21 +1,19 @@
-{% extends "base.html" %}
-{% block content %}
-    <h2>Register</h2>
-      <br>
-      <form action="" method="post">
-      <div class="form-group">
-        <input class="form-control" type="text" placeholder="Display name" name="display_name" value="{{request.form.display_name }}">
-      </div>
-          <div class="form-group">
-        <input class="form-control" type="text" placeholder="Username" name="username" value="{{request.form.username }}">
-          </div>
-          <div class="form-group">
-        <input class="form-control" type="password" placeholder="Password" name="password" value="{{request.form.password }}">
-          </div>
-          <div class="form-group">
-        <input class="btn btn-primary" type="submit" value="Register">
-          </div>
-      </form>
-
+{% extends "login.html" %} {% block card %}
+<h2>Register</h2>
+<br>
+<form action="" method="post">
+  <div class="form-group">
+    <input class="form-control" type="text" placeholder="Display name" name="display_name" value="{{request.form.display_name }}">
+  </div>
+  <div class="form-group">
+    <input class="form-control" type="text" placeholder="Username" name="username" value="{{request.form.username }}">
+  </div>
+  <div class="form-group">
+    <input class="form-control" type="password" placeholder="Password" name="password" value="{{request.form.password }}">
+  </div>
+  <div class="form-group">
+    <input class="btn btn-primary btn-block" type="submit" value="Register">
+  </div>
+  <a href="/login" class="card-link">Have an account? <b>Login</b> instead</a>
+</form>
 {% endblock %}
-
