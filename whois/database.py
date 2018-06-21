@@ -128,6 +128,7 @@ class Device(pw.Model):
 
 class History(pw.Model):
     """History of user activity in HS"""
+
     datetime = pw.DateTimeField()
     user_count = pw.IntegerField()
     unknown_device_count = pw.IntegerField()
@@ -135,4 +136,3 @@ class History(pw.Model):
 
     class Meta:
         database = db
-
