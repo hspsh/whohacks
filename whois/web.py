@@ -58,7 +58,7 @@ def before_request():
     logger.info("connecting to db")
     db.connect()
     if not ip_range(settings.ip_mask, request.remote_addr):
-        flash("Outside local network, some functions forbidden!", "alert-warning")
+        flash("Outside local network, some functions forbidden!", "outside-warning")
 
 
 @app.teardown_appcontext
@@ -151,7 +151,7 @@ def last_seen_devices():
 def set_device_flags(device, new_flags):
     if device.owner is not None and device.owner.get_id() != current_user.get_id():
         logger.error("no permission for {}".format(current_user.username))
-        flash("No permission!".format(device.mac_address), "alert-danger")
+        flash("No permission!".format(device.mac_address), "error")
         return
     device.is_hidden = "hidden" in new_flags
     device.is_esp = "esp" in new_flags
@@ -163,7 +163,7 @@ def set_device_flags(device, new_flags):
             current_user.username, device.mac_address, device.flags
         )
     )
-    flash("Flags set".format(device.mac_address), "alert-info")
+    flash("Flags set".format(device.mac_address), "info")
 
 
 @app.route("/device/<mac_address>", methods=["GET", "POST"])
@@ -195,23 +195,23 @@ def device_view(mac_address):
 def claim_device(device):
     if device.owner is not None:
         logger.error("no permission for {}".format(current_user.username))
-        flash("No permission!".format(device.mac_address), "alert-danger")
+        flash("No permission!".format(device.mac_address), "error")
         return
     device.owner = current_user.get_id()
     device.save()
     logger.info("{} claim {}".format(current_user.username, device.mac_address))
-    flash("Claimed {}!".format(device.mac_address), "alert-success")
+    flash("Claimed {}!".format(device.mac_address), "success")
 
 
 def unclaim_device(device):
     if device.owner is not None and device.owner.get_id() != current_user.get_id():
         logger.error("no permission for {}".format(current_user.username))
-        flash("No permission!".format(device.mac_address), "alert-danger")
+        flash("No permission!".format(device.mac_address), "error")
         return
     device.owner = None
     device.save()
     logger.info("{} unclaim {}".format(current_user.username, device.mac_address))
-    flash("Unclaimed {}!".format(device.mac_address), "alert-info")
+    flash("Unclaimed {}!".format(device.mac_address), "info")
 
 
 @app.route("/register", methods=["GET", "POST"])
@@ -220,7 +220,7 @@ def register():
     """Registration form"""
     if current_user.is_authenticated:
         logger.error("Shouldn't register when auth")
-        flash("Shouldn't register when auth", "alert-danger")
+        flash("Shouldn't register when auth", "error")
         return redirect(url_for("index"))
 
     if request.method == "POST":
@@ -239,7 +239,7 @@ def register():
         else:
             user.save()
             logger.info("registered new user: {}".format(user.username))
-            flash("Registered.", "alert-info")
+            flash("Registered.", "info")
 
         return redirect(url_for("login"))
 
@@ -251,7 +251,7 @@ def login():
     """Login using naive db or LDAP (work on it @priest)"""
     if current_user.is_authenticated:
         logger.error("Shouldn't login when auth")
-        flash("Shouldn't login when auth", "alert-danger")
+        flash("Shouldn't login when auth", "error")
         return redirect(url_for("index"))
 
     if request.method == "POST":
@@ -259,7 +259,7 @@ def login():
             user = User.get(User.username == request.form["username"])
         except User.DoesNotExist:
             logger.info("failed log in: {}".format(None))
-            flash("Invalid credentials", "alert-danger")
+            flash("Invalid credentials", "error")
             return render_template("login.html")
 
         if user is not None and user.auth(request.form["password"]) is True:
@@ -269,12 +269,12 @@ def login():
                 "Hello {}! You can now claim and manage your devices.".format(
                     current_user.username
                 ),
-                "alert-success",
+                "success",
             )
             return redirect(url_for("index"))
         else:
             logger.info("failed log in: {}".format(user.username))
-            flash("Invalid credentials", "alert-danger")
+            flash("Invalid credentials", "error")
             return render_template("login.html")
 
     return render_template("login.html")
@@ -286,7 +286,7 @@ def logout():
     username = current_user.username
     logout_user()
     logger.info("logged out: {}".format(username))
-    flash("Logged out.", "alert-info")
+    flash("Logged out.", "info")
     return redirect(url_for("index"))
 
 
@@ -304,7 +304,7 @@ def profile_edit():
                     current_user.password = request.form["new_password"]
             except Exception as exc:
                 if exc.args[0] == "too_short":
-                    flash("Password too short, minimum length is 3", "alert-warning")
+                    flash("Password too short, minimum length is 3", "warning")
                 else:
                     logger.error(exc)
             else:
@@ -316,8 +316,8 @@ def profile_edit():
                     "flags: got {} set {:b}".format(new_flags, current_user.flags)
                 )
                 current_user.save()
-                flash("Saved", "alert-success")
+                flash("Saved", "success")
         else:
-            flash("Invalid password", "alert-danger")
+            flash("Invalid password", "error")
 
     return render_template("profile.html", user=current_user)

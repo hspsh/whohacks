@@ -1,0 +1,24 @@
+{% with messages = get_flashed_messages(with_categories=true, category_filter=['outside-warning']) %}
+    {% if messages %}
+        {% for category, message in messages[:1] %}
+            <div class="alert alert-warning"
+                 role="alert">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+{# TODO: make it less hacky #}
+            {% if category != "outside-warning" %}
+            <div class="alert {{ {'info':'alert-info',
+            'debug':'alert-light',
+            'success':'alert-success',
+            'warning':'alert-warning',
+            'error':'alert-danger'}[category]|default('alert-info') }}"
+                 role="alert">{{ message }}</div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+{% endwith %}
