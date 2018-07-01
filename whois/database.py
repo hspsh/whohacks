@@ -124,3 +124,15 @@ class Device(pw.Model):
         res.last_seen = last_seen
         res.hostname = hostname
         res.save()
+
+
+class History(pw.Model):
+    """History of user activity in HS"""
+
+    datetime = pw.DateTimeField()
+    user_count = pw.IntegerField()
+    unknown_device_count = pw.IntegerField()
+    known_device_count = pw.IntegerField()
+
+    class Meta:
+        database = db

@@ -9,25 +9,29 @@
 
 - Dependencies
 
-```bash
+```shell
 pipenv install
 ```
 
 - Create database
 
-```bash
+```shell
 pipenv run python helpers/db_create.py
+# or
+pipenv run init-db
 ```
 
 ## Running
 
-```bash
+```shell
 pipenv run python -m whois
+# or
+pipenv run serve
 ```
 
 ## Deployment
 
-```bash
+```shell
 docker-compose build
 # first run, later it should just connect to existing db
 docker-compose run web python3 helpers/db_create.py

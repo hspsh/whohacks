@@ -3,6 +3,10 @@ url = "https://pypi.python.org/simple"
 verify_ssl = true
 name = "pypi"
 
+[scripts]
+serve = "python -m whois"
+"init-db" = "python helpers/db_create.py"
+
 [dev-packages]
 pytest = "*"
 freezegun = "*"
@@ -15,6 +19,7 @@ Flask = "*"
 Flask-Login = "*"
 python-dateutil = "*"
 peewee = "*"
+apscheduler = "*"
 
 [requires]
 python_version = "3.6"
