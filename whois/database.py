@@ -114,13 +114,13 @@ class Device(pw.Model):
     @classmethod
     def update_or_create(cls, mac_address, last_seen, hostname=None):
         try:
-            res = cls.get(cls.mac_address == mac_address)
-        # TODO: narrow Error
-        except pw.PeeweeException:
             res = cls.create(
                 mac_address=mac_address, hostname=hostname, last_seen=last_seen
             )
 
-        res.last_seen = last_seen
-        res.hostname = hostname
+        except pw.IntegrityError:
+            res = cls.get(cls.mac_address == mac_address)
+            res.last_seen = last_seen
+            res.hostname = hostname
+
         res.save()
