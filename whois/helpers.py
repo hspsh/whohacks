@@ -51,18 +51,18 @@ def ip_range(mask, address):
 
 def in_space_required():
     def decorator(f):
-        try:
-            ip_addr = request.headers.getlist("X-Forwarded-For")[0]
-            logger.info(
-                    "forward from %s to %s",
-                    request.remote_addr,
-                    ip_addr,
-                )
-        except RuntimeError:
-            ip_addr = request.remote_addr
-
         @wraps(f)
         def func(*a, **kw):
+            if request.headers.getlist("X-Forwarded-For"):
+                ip_addr = request.headers.getlist("X-Forwarded-For")[0]
+                logger.info(
+                    "forward from %s to %s",
+                    request.remote_addr,
+                    request.headers.getlist("X-Forwarded-For")[0],
+                )
+            else:
+                ip_addr = request.remote_addr
+
             if not ip_range(ip_mask, ip_addr):
                 logger.error("{} request from outside".format(ip_addr))
                 abort(403)
