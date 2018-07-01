@@ -43,7 +43,6 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 
 
-
 @login_manager.user_loader
 def load_user(user_id):
     try:
@@ -58,7 +57,18 @@ def load_user(user_id):
 def before_request():
     app.logger.info("connecting to db")
     db.connect()
-    if not ip_range(settings.ip_mask, request.remote_addr):
+
+    if request.headers.getlist("X-Forwarded-For"):
+        ip_addr = request.headers.getlist("X-Forwarded-For")[0]
+        logger.info(
+            "forward from %s to %s",
+            request.remote_addr,
+            request.headers.getlist("X-Forwarded-For")[0],
+        )
+    else:
+        ip_addr = request.remote_addr
+
+    if not ip_range(settings.ip_mask, ip_addr):
         app.logger.error("%s", request.headers)
         flash("Outside local network, some functions forbidden!", "outside-warning")
 
@@ -146,7 +156,9 @@ def last_seen_devices():
 
         return "OK", 200
     else:
-        app.logger.warning("request from outside whitelist: {}".format(request.remote_addr))
+        app.logger.warning(
+            "request from outside whitelist: {}".format(request.remote_addr)
+        )
         return abort(403)
 
 
