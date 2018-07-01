@@ -21,6 +21,7 @@ from flask_login import (
     login_user,
     logout_user,
 )
+from flask_cors import CORS
 
 from whois import settings
 from whois.database import db, Device, User
@@ -41,6 +42,8 @@ app = Flask(__name__)
 app.secret_key = os.environ["SECRET_KEY"]
 login_manager = LoginManager()
 login_manager.init_app(app)
+
+cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 
 @login_manager.user_loader
