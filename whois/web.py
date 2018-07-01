@@ -169,7 +169,7 @@ def set_device_flags(device, new_flags):
 @app.route("/device/<mac_address>", methods=["GET", "POST"])
 @login_required
 @in_space_required()
-def device(mac_address):
+def device_view(mac_address):
     """Get info about device, claim device, release device"""
 
     try:
@@ -218,6 +218,11 @@ def unclaim_device(device):
 @in_space_required()
 def register():
     """Registration form"""
+    if current_user.is_authenticated:
+        logger.error("Shouldn't register when auth")
+        flash("Shouldn't register when auth", "alert-danger")
+        return redirect(url_for("index"))
+
     if request.method == "POST":
         # TODO: WTF forms for safety
         display_name = request.form["display_name"]
@@ -233,7 +238,7 @@ def register():
                 print(exc)
         else:
             user.save()
-            logger.info("registred new user: {}".format(user.username))
+            logger.info("registered new user: {}".format(user.username))
             flash("Registered.", "alert-info")
 
         return redirect(url_for("login"))
@@ -244,6 +249,11 @@ def register():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     """Login using naive db or LDAP (work on it @priest)"""
+    if current_user.is_authenticated:
+        logger.error("Shouldn't login when auth")
+        flash("Shouldn't login when auth", "alert-danger")
+        return redirect(url_for("index"))
+
     if request.method == "POST":
         try:
             user = User.get(User.username == request.form["username"])

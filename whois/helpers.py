@@ -31,8 +31,13 @@ def is_safe_url(target):
     return test_url.scheme in ("http", "https") and ref_url.netloc == test_url.netloc
 
 
-# TODO: taken from SO
 def ip_range(mask, address):
+    """
+    Checks if given address is in space defined by mask
+    :param mask: string for ex. '192.168.88.1-255'
+    :param address:
+    :return: boolean
+    """
     ip_parts = address.split(".")
     for index, current_range in enumerate(mask.split(".")):
         if "-" in current_range:
