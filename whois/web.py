@@ -43,30 +43,32 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 
 
+
 @login_manager.user_loader
 def load_user(user_id):
     try:
         return User.get_by_id(user_id)
     except User.DoesNotExist as exc:
-        logger.error("{}".format(exc))
-        logger.error("return None")
+        app.logger.error("{}".format(exc))
+        app.logger.error("return None")
         return None
 
 
 @app.before_request
 def before_request():
-    logger.info("connecting to db")
+    app.logger.info("connecting to db")
     db.connect()
     if not ip_range(settings.ip_mask, request.remote_addr):
+        app.logger.error("%s", request.headers)
         flash("Outside local network, some functions forbidden!", "outside-warning")
 
 
 @app.teardown_appcontext
 def after_request(error):
-    logger.info("closing db")
+    app.logger.info("closing db")
     db.close()
     if error:
-        logger.error(error)
+        app.logger.error(error)
 
 
 @app.route("/")
@@ -112,7 +114,7 @@ def now_at_space():
         "unknown_devices": len(unclaimed_devices(devices)),
     }
 
-    logger.info("sending request for /api/now {}".format(data))
+    app.logger.info("sending request for /api/now {}".format(data))
 
     return jsonify(data)
 
@@ -124,33 +126,33 @@ def last_seen_devices():
     :return: status code
     """
     if request.remote_addr in settings.whitelist:
-        logger.info("request from whitelist: {}".format(request.remote_addr))
+        app.logger.info("request from whitelist: {}".format(request.remote_addr))
 
         if request.headers.get("User-Agent") == "Mikrotik/6.x Fetch":
-            logger.info("got data from mikrotik")
+            app.logger.info("got data from mikrotik")
             data = json.loads(request.values.get("data", []))
             parsed_data = parse_mikrotik_data(datetime.now(), data)
         else:
-            logger.warning("bad request \n{}".format(request.headers))
+            app.logger.warning("bad request \n{}".format(request.headers))
             return abort(400)
 
-        logger.info("parsed data, got {} devices".format(len(parsed_data)))
+        app.logger.info("parsed data, got {} devices".format(len(parsed_data)))
 
         with db.atomic():
             for dev in parsed_data:
                 Device.update_or_create(**dev)
 
-        logger.info("updated last seen devices")
+        app.logger.info("updated last seen devices")
 
         return "OK", 200
     else:
-        logger.warning("request from outside whitelist: {}".format(request.remote_addr))
+        app.logger.warning("request from outside whitelist: {}".format(request.remote_addr))
         return abort(403)
 
 
 def set_device_flags(device, new_flags):
     if device.owner is not None and device.owner.get_id() != current_user.get_id():
-        logger.error("no permission for {}".format(current_user.username))
+        app.logger.error("no permission for {}".format(current_user.username))
         flash("No permission!".format(device.mac_address), "error")
         return
     device.is_hidden = "hidden" in new_flags
@@ -158,7 +160,7 @@ def set_device_flags(device, new_flags):
     device.is_infrastructure = "infrastructure" in new_flags
     print(device.flags)
     device.save()
-    logger.info(
+    app.logger.info(
         "{} changed {} flags to {}".format(
             current_user.username, device.mac_address, device.flags
         )
@@ -175,7 +177,7 @@ def device_view(mac_address):
     try:
         device = Device.get(Device.mac_address == mac_address)
     except Device.DoesNotExist as exc:
-        logger.error("{}".format(exc))
+        app.logger.error("{}".format(exc))
         return abort(404)
 
     if request.method == "POST":
@@ -194,23 +196,23 @@ def device_view(mac_address):
 
 def claim_device(device):
     if device.owner is not None:
-        logger.error("no permission for {}".format(current_user.username))
+        app.logger.error("no permission for {}".format(current_user.username))
         flash("No permission!".format(device.mac_address), "error")
         return
     device.owner = current_user.get_id()
     device.save()
-    logger.info("{} claim {}".format(current_user.username, device.mac_address))
+    app.logger.info("{} claim {}".format(current_user.username, device.mac_address))
     flash("Claimed {}!".format(device.mac_address), "success")
 
 
 def unclaim_device(device):
     if device.owner is not None and device.owner.get_id() != current_user.get_id():
-        logger.error("no permission for {}".format(current_user.username))
+        app.logger.error("no permission for {}".format(current_user.username))
         flash("No permission!".format(device.mac_address), "error")
         return
     device.owner = None
     device.save()
-    logger.info("{} unclaim {}".format(current_user.username, device.mac_address))
+    app.logger.info("{} unclaim {}".format(current_user.username, device.mac_address))
     flash("Unclaimed {}!".format(device.mac_address), "info")
 
 
@@ -219,7 +221,7 @@ def unclaim_device(device):
 def register():
     """Registration form"""
     if current_user.is_authenticated:
-        logger.error("Shouldn't register when auth")
+        app.logger.error("Shouldn't register when auth")
         flash("Shouldn't register when auth", "error")
         return redirect(url_for("index"))
 
@@ -238,7 +240,7 @@ def register():
                 print(exc)
         else:
             user.save()
-            logger.info("registered new user: {}".format(user.username))
+            app.logger.info("registered new user: {}".format(user.username))
             flash("Registered.", "info")
 
         return redirect(url_for("login"))
@@ -250,7 +252,7 @@ def register():
 def login():
     """Login using naive db or LDAP (work on it @priest)"""
     if current_user.is_authenticated:
-        logger.error("Shouldn't login when auth")
+        app.logger.error("Shouldn't login when auth")
         flash("Shouldn't login when auth", "error")
         return redirect(url_for("index"))
 
@@ -258,13 +260,13 @@ def login():
         try:
             user = User.get(User.username == request.form["username"])
         except User.DoesNotExist:
-            logger.info("failed log in: {}".format(None))
+            app.logger.info("failed log in: {}".format(None))
             flash("Invalid credentials", "error")
             return render_template("login.html")
 
         if user is not None and user.auth(request.form["password"]) is True:
             login_user(user)
-            logger.info("logged in: {}".format(user.username))
+            app.logger.info("logged in: {}".format(user.username))
             flash(
                 "Hello {}! You can now claim and manage your devices.".format(
                     current_user.username
@@ -273,7 +275,7 @@ def login():
             )
             return redirect(url_for("index"))
         else:
-            logger.info("failed log in: {}".format(user.username))
+            app.logger.info("failed log in: {}".format(user.username))
             flash("Invalid credentials", "error")
             return render_template("login.html")
 
@@ -285,7 +287,7 @@ def login():
 def logout():
     username = current_user.username
     logout_user()
-    logger.info("logged out: {}".format(username))
+    app.logger.info("logged out: {}".format(username))
     flash("Logged out.", "info")
     return redirect(url_for("index"))
 
@@ -306,13 +308,13 @@ def profile_edit():
                 if exc.args[0] == "too_short":
                     flash("Password too short, minimum length is 3", "warning")
                 else:
-                    logger.error(exc)
+                    app.logger.error(exc)
             else:
                 current_user.display_name = request.form["display_name"]
                 new_flags = request.form.getlist("flags")
                 current_user.is_hidden = "hidden" in new_flags
                 current_user.is_name_anonymous = "anonymous for public" in new_flags
-                logger.info(
+                app.logger.info(
                     "flags: got {} set {:b}".format(new_flags, current_user.flags)
                 )
                 current_user.save()
