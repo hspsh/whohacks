@@ -149,7 +149,7 @@ def last_seen_devices():
         ip_addr = request.remote_addr
 
     if any(ip_range(whitelist_addr, ip_addr) for whitelist_addr in settings.whitelist):
-        app.logger.info("request from whitelist: {}".format(request.remote_addr))
+        app.logger.info("request from whitelist: {}".format(ip_addr))
 
         if request.headers.get("User-Agent") == "Mikrotik/6.x Fetch":
             app.logger.info("got data from mikrotik")
@@ -170,7 +170,7 @@ def last_seen_devices():
         return "OK", 200
     else:
         app.logger.warning(
-            "request from outside whitelist: {}".format(request.remote_addr)
+            "request from outside whitelist: {}".format(ip_addr)
         )
         return abort(403)
 
