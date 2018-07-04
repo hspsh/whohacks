@@ -138,7 +138,17 @@ def last_seen_devices():
     Post last seen devices to database
     :return: status code
     """
-    if request.remote_addr in settings.whitelist:
+    if request.headers.getlist("X-Forwarded-For"):
+        ip_addr = request.headers.getlist("X-Forwarded-For")[0]
+        logger.info(
+            "forward from %s to %s",
+            request.remote_addr,
+            request.headers.getlist("X-Forwarded-For")[0],
+        )
+    else:
+        ip_addr = request.remote_addr
+
+    if any(ip_range(whitelist_addr, ip_addr) for whitelist_addr in settings.whitelist):
         app.logger.info("request from whitelist: {}".format(request.remote_addr))
 
         if request.headers.get("User-Agent") == "Mikrotik/6.x Fetch":
