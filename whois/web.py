@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+__version__ = "1.2.dev"
 import json
 import logging
 import os
@@ -45,6 +45,9 @@ login_manager.init_app(app)
 
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
+common_vars_tpl = {
+    "version": __version__
+}
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -101,6 +104,7 @@ def index():
             my_devices=mine,
             users=filter_anon_names(users),
             headcount=len(users),
+            **common_vars_tpl
         )
 
     return render_template(
@@ -108,6 +112,7 @@ def index():
         users=filter_anon_names(users),
         headcount=len(users),
         unknowncount=len(unclaimed_devices(recent)),
+        **common_vars_tpl
     )
 
 
@@ -216,7 +221,7 @@ def device_view(mac_address):
         elif request.values.get("flags"):
             set_device_flags(device, request.form.getlist("flags"))
 
-    return render_template("device.html", device=device)
+    return render_template("device.html", device=device, **common_vars_tpl)
 
 
 def claim_device(device):
@@ -270,7 +275,7 @@ def register():
 
         return redirect(url_for("login"))
 
-    return render_template("register.html")
+    return render_template("register.html", **common_vars_tpl)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -285,9 +290,7 @@ def login():
         try:
             user = User.get(User.username == request.form["username"])
         except User.DoesNotExist:
-            app.logger.info("failed log in: {}".format(None))
-            flash("Invalid credentials", "error")
-            return render_template("login.html")
+            user = None
 
         if user is not None and user.auth(request.form["password"]) is True:
             login_user(user)
@@ -302,9 +305,8 @@ def login():
         else:
             app.logger.info("failed log in: {}".format(user.username))
             flash("Invalid credentials", "error")
-            return render_template("login.html")
 
-    return render_template("login.html")
+    return render_template("login.html", **common_vars_tpl)
 
 
 @app.route("/logout")
@@ -347,4 +349,4 @@ def profile_edit():
         else:
             flash("Invalid password", "error")
 
-    return render_template("profile.html", user=current_user)
+    return render_template("profile.html", user=current_user, **common_vars_tpl)
