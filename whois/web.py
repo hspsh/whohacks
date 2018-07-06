@@ -14,6 +14,7 @@ from flask import (
     jsonify,
     abort,
 )
+from flask_cors import CORS
 from flask_login import (
     LoginManager,
     login_required,
@@ -21,7 +22,6 @@ from flask_login import (
     login_user,
     logout_user,
 )
-from flask_cors import CORS
 
 from whois import settings
 from whois.database import db, Device, User
@@ -98,7 +98,7 @@ def index():
         unclaimed = unclaimed_devices(recent)
         mine = current_user.devices
         return render_template(
-            "index.html",
+            "devices.html",
             unclaimed=unclaimed,
             recent=recent,
             my_devices=mine,
@@ -115,6 +115,26 @@ def index():
         **common_vars_tpl
     )
 
+
+@login_required
+@app.route("/devices")
+def devices():
+    recent = Device.get_recent(**settings.recent_time)
+    visible_devices = filter_hidden(recent)
+    users = filter_hidden(owners_from_devices(visible_devices))
+
+    if current_user.is_authenticated:
+        unclaimed = unclaimed_devices(recent)
+        mine = current_user.devices
+        return render_template(
+            "devices.html",
+            unclaimed=unclaimed,
+            recent=recent,
+            my_devices=mine,
+            users=filter_anon_names(users),
+            headcount=len(users),
+            **common_vars_tpl
+        )
 
 @app.route("/api/now", methods=["GET"])
 def now_at_space():
@@ -284,7 +304,7 @@ def login():
     if current_user.is_authenticated:
         app.logger.error("Shouldn't login when auth")
         flash("Shouldn't login when auth", "error")
-        return redirect(url_for("index"))
+        return redirect(url_for("devices"))
 
     if request.method == "POST":
         try:
@@ -301,7 +321,7 @@ def login():
                 ),
                 "success",
             )
-            return redirect(url_for("index"))
+            return redirect(url_for("devices"))
         else:
             app.logger.info("failed log in: {}".format(user.username))
             flash("Invalid credentials", "error")
