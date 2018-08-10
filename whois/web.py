@@ -93,19 +93,6 @@ def index():
     visible_devices = filter_hidden(recent)
     users = filter_hidden(owners_from_devices(visible_devices))
 
-    if current_user.is_authenticated:
-        unclaimed = unclaimed_devices(recent)
-        mine = current_user.devices
-        return render_template(
-            "devices.html",
-            unclaimed=unclaimed,
-            recent=recent,
-            my_devices=mine,
-            users=filter_anon_names(users),
-            headcount=len(users),
-            **common_vars_tpl
-        )
-
     return render_template(
         "landing.html",
         users=filter_anon_names(users),
