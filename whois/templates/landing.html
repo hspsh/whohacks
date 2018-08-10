@@ -1,45 +1,23 @@
 {% extends "base.html" %}
 {% block content %}
-    <div class="card-columns">
-        <div class="card text-white bg-primary">
-            <div class="card-body">
 
-                <span style="font-size: 3rem">{{ headcount }} {{ {0:'osób', 1:'osoba', 2:'osoby', 3:'osoby', 4:'osoby'}[headcount]|default('osób') }}</span><br>
-                w Hackerspace
-            </div>
-        </div>
-        {% if headcount == 1 %}
-            <div class="card">
-                <img class="card-img" src="https://i.imgur.com/KFicjPn.jpg"
-                     alt="">
-            </div>
-        {% endif %}
-        {% if unknowncount > 0 %}
-            <div class="card text-black border-primary">
-                <div class="card-body">
-                    <span style="font-size: 1.6rem">{{ unknowncount | default(0) }} nieznanych urządzeń</span><br>
-                    <a class="btn btn-outline-primary" href="/login">Zajmij
-                        je</a>
-                </div>
-            </div>
-        {% endif %}
-        {% if headcount > 0 %}
-            <div class="card text-black">
-{#                <div class="card-header">#}
-{#                    Na miejscu#}
-{#                </div>#}
-                    <ul class="list-group">
-                        {% for user in users %}
-                            <li class="list-group-item">@{{ user }}</li>
-                        {% endfor %}
-                    </ul>
-            </div>
-        {% endif %}
-        <div class="card text-black">
-            <div class="card-body">
-                Komenda na Slacku <kbd>/ktohakuje</kbd><br>
-                Więcej instrukcji na <a href="https://wiki.hs3.pl/projekty/whois">stronie wiki</a>
-            </div>
-        </div>
-    </div>
+<h2>Witaj w systemie obecności</h2>
+
+<p>
+    <span style="font-size: 3rem">aktualnie w HS {{ headcount }} {{ {0:'osób', 1:'osoba', 2:'osoby', 3:'osoby', 4:'osoby'}[headcount]|default('osób') }} </span>    
+</p>
+<p>
+    <a href="/login">Zaloguj się</a> aby zająć urządzenie należące do ciebie. Powinno pojawić na liście za mniej więcej 15 minut po twoim przyjściu
+</p> 
+
+<h3>API</h3>
+<p>
+    Dostępne jest proste API udostępniające aktualne dane w JSON'nie
+    <br><kbd>https://whois.at.hs3.pl/api/now</kbd>
+</p>
+<p>
+    Można spytać o dowolny okres wstecz
+    <br><kbd>https://whois.at.hs3.pl/api/now?days=3&hours=2&minutes=13</kbd>
+</p>
+
 {% endblock %}

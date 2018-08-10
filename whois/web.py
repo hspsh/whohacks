@@ -1,4 +1,4 @@
-__version__ = "1.2.dev"
+__version__ = "1.2.3"
 import json
 import logging
 import os
@@ -45,9 +45,8 @@ login_manager.init_app(app)
 
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-common_vars_tpl = {
-    "version": __version__
-}
+common_vars_tpl = {"version": __version__}
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -136,6 +135,7 @@ def devices():
             **common_vars_tpl
         )
 
+
 @app.route("/api/now", methods=["GET"])
 def now_at_space():
     """
@@ -143,7 +143,13 @@ def now_at_space():
     used by other services in HS,
     requests should be from hs3.pl domain or from HSWAN
     """
-    devices = filter_hidden(Device.get_recent(**settings.recent_time))
+    period = {**settings.recent_time}
+
+    for key in ["days", "hours", "minutes"]:
+        if key in request.args:
+            period[key] = request.args.get(key, default=0, type=int)
+
+    devices = filter_hidden(Device.get_recent(**period))
     users = filter_hidden(owners_from_devices(devices))
 
     data = {
@@ -194,9 +200,7 @@ def last_seen_devices():
 
         return "OK", 200
     else:
-        app.logger.warning(
-            "request from outside whitelist: {}".format(ip_addr)
-        )
+        app.logger.warning("request from outside whitelist: {}".format(ip_addr))
         return abort(403)
 
 
