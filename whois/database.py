@@ -95,7 +95,7 @@ class Device(pw.Model):
         return self.mac_address
 
     @classmethod
-    def get_recent(cls, hours=0, minutes=30, seconds=0):
+    def get_recent(cls, days=0, hours=0, minutes=30, seconds=0):
         """
         Returns list of last connected devices
         :param hours:
@@ -104,7 +104,7 @@ class Device(pw.Model):
         :return: list of devices
         """
         recent_time = datetime.now() - timedelta(
-            hours=hours, minutes=minutes, seconds=seconds
+            days=days, hours=hours, minutes=minutes, seconds=seconds
         )
         devices = list(
             cls.select().where(cls.last_seen > recent_time).order_by(cls.last_seen)
