@@ -314,7 +314,7 @@ def login():
             )
             return redirect(url_for("devices"))
         else:
-            app.logger.info("failed log in: {}".format(user.username))
+            app.logger.info("failed log in: {}".format(request.form["username"]))
             flash("Invalid credentials", "error")
 
     return render_template("login.html", **common_vars_tpl)
