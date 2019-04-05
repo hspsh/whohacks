@@ -13,6 +13,15 @@
 pipenv install
 ```
 
+- Create .env file
+
+```shell
+cat >> .env <<EOF
+PYTHONPATH=.
+SECRET_KEY=<your_secret_key>
+EOF
+```
+
 - Create database
 
 ```shell
@@ -53,7 +62,7 @@ services:
     build: .
     environment:
       # you should change secret key
-      - SECRET_KEY=secret
+      - SECRET_KEY=<your_secret_key>
       - DB_PATH=/data/whoisdevices.db
     ports:
       # use 127.0.0.1:8000:8000
