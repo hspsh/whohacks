@@ -27,6 +27,7 @@ flask-login = "*"
 python-dateutil = "*"
 peewee = "*"
 flask-cors = "*"
+Jinja2 = ">=2.10.1"
 
 
 [requires]
