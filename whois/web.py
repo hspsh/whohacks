@@ -171,7 +171,11 @@ def last_seen_devices():
 
         if request.headers.get("User-Agent") == "Mikrotik/6.x Fetch":
             app.logger.info("got data from mikrotik")
-            data = json.loads(request.values.get("data", []))
+            try:
+                data = json.loads(request.values.get("data", []))
+            except Exception as exc:
+                app.logger.error("malformed request")
+                return abort(400)
             parsed_data = parse_mikrotik_data(datetime.now(), data)
         else:
             app.logger.warning("bad request \n{}".format(request.headers))
