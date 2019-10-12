@@ -7,8 +7,10 @@
     <span style="font-size: 3rem">Obecnie w HS znajduje się {{ headcount }} {{ {0:'osób', 1:'osoba', 2:'osoby', 3:'osoby', 4:'osoby'}[headcount]|default('osób') }} </span>    
 </p>
 <p>
+    {% if current_user.is_anonymous %}
     <a href="/login">Zaloguj się</a> aby zająć urządzenie należące do ciebie. Powinno pojawić na liście za mniej więcej 15 minut po twoim przyjściu
-</p> 
+    {% endif %}
+</p>
 
 <h3>API</h3>
 <p>
