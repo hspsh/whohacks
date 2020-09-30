@@ -1,5 +1,5 @@
 # mikrtotik ip, or other reporting devices
-name = "at.hs3.pl"
+name = "whois.at.hsp.sh"
 whitelist = ["10.14.4.1", "10.14.10.1"]
 host = "0.0.0.0"
 user_flags = {1: "hidden", 2: "name_anonymous"}

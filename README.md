@@ -1,4 +1,4 @@
-# whois @ HS3C
+# whois @ HSP
 [![Build Status](https://travis-ci.com/hs3city/whois.svg?branch=master)](https://travis-ci.com/hs3city/whois) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
 ## Prerequisities
