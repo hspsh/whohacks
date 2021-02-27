@@ -1,7 +1,13 @@
 import os
+import logging
+
 import pika
+
 from datetime import datetime
 from whois.database import db, Device
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 connection = pika.BlockingConnection(pika.ConnectionParameters(host=os.environ['MQ_HOST']))
@@ -13,11 +19,11 @@ queue_name = result.method.queue
 
 channel.queue_bind(exchange=os.environ['MQ_EXCHANGE'], queue=queue_name, routing_key="")
 
-print(" [*] Waiting for logs. To exit press CTRL+C")
+logger.info(" [*] Waiting for logs. To exit press CTRL+C")
 
 
 def callback(ch, method, properties, body):
-    print(" [x] %r:%r" % (method.routing_key, body))
+    logger.info(" [x] %r:%r" % (method.routing_key, body))
     Device.update_or_create(mac_address=body.decode().upper(), last_seen=datetime.now())
 
 
