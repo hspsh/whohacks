@@ -56,7 +56,7 @@ This: `-v /etc/localtime:/etc/localtime:ro` is required to match the timezone in
 Sample:
 
 ```yaml
-version: '2'
+version: '3'
 services:
   rabbitmq:
     image: 'rabbitmq:3.6-management-alpine'
@@ -64,7 +64,7 @@ services:
       - '5672:5672'
       - '15672:15672'
   web:
-    build: .
+    build: ./docker/web
     environment:
       # you should change secret key
       - SECRET_KEY=<your_secret_key>
@@ -77,7 +77,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
     restart: always
   worker:
-    build: .
+    build: ./docker/worker
     environment:
       - DB_PATH=/data/whoisdevices.db
     volumes:
