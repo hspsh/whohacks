@@ -128,7 +128,7 @@ def now_at_space():
     """
     Send list of people currently in HS as JSON, only registred people,
     used by other services in HS,
-    requests should be from hs3.pl domain or from HSWAN
+    requests should be from hsp.sh domain or from HSWAN
     """
     period = {**settings.recent_time}
 
