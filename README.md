@@ -58,6 +58,11 @@ Sample:
 ```yaml
 version: '2'
 services:
+  rabbitmq:
+    image: 'rabbitmq:3.6-management-alpine'
+    ports:
+      - '5672:5672'
+      - '15672:15672'
   web:
     build: .
     environment:
@@ -67,6 +72,14 @@ services:
     ports:
       # use 127.0.0.1:8000:8000
       - "8000:8000"
+    volumes:
+      - database:/data
+      - /etc/localtime:/etc/localtime:ro
+    restart: always
+  worker:
+    build: .
+    environment:
+      - DB_PATH=/data/whoisdevices.db
     volumes:
       - database:/data
       - /etc/localtime:/etc/localtime:ro
