@@ -1,16 +1,17 @@
+import os
 import pika
 from datetime import datetime
 from whois.database import db, Device
 
 
-connection = pika.BlockingConnection(pika.ConnectionParameters(host="localhost"))
+connection = pika.BlockingConnection(pika.ConnectionParameters(host=os.environ['MQ_HOST']))
 channel = connection.channel()
 
 
 result = channel.queue_declare(queue="whohacks", exclusive=False)
 queue_name = result.method.queue
 
-channel.queue_bind(exchange="whohacks", queue=queue_name, routing_key="")
+channel.queue_bind(exchange=os.environ['MQ_EXCHANGE'], queue=queue_name, routing_key="")
 
 print(" [*] Waiting for logs. To exit press CTRL+C")
 
