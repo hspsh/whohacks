@@ -14,7 +14,7 @@ COPY . .
 ENV PYTHONPATH /app
 ENV DB_PATH /data/whoisdevices.db
 ENV MQ_HOST localhost
-ENV DB_EXCHANGE whohacks
+ENV MQ_EXCHANGE whohacks
 
 RUN mkdir /data && chown nobody /data
 VOLUME ["/data"]
