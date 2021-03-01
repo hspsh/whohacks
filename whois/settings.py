@@ -1,5 +1,6 @@
 # mikrtotik ip, or other reporting devices
-name = "at.hsp.sh"
+name = "kto hakuje"
+base_url = "whois.at.hsp.sh"
 whitelist = ["192.168.88.1"]
 host = "0.0.0.0"
 user_flags = {1: "hidden", 2: "name_anonymous"}
