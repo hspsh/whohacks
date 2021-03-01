@@ -45,7 +45,7 @@ login_manager.init_app(app)
 
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-common_vars_tpl = {"version": __version__}
+common_vars_tpl = {"version": __version__, "site_name": settings.name, "base_url": settings.base_url}
 
 
 @login_manager.user_loader
@@ -128,7 +128,7 @@ def now_at_space():
     """
     Send list of people currently in HS as JSON, only registred people,
     used by other services in HS,
-    requests should be from hs3.pl domain or from HSWAN
+    requests should be from hsp.sh domain or from HSWAN
     """
     period = {**settings.recent_time}
 
