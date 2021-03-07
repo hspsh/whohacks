@@ -1,0 +1,31 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[scripts]
+serve = "python -m whois"
+"init-db" = "python helpers/db_create.py"
+
+[dev-packages]
+pytest = "*"
+freezegun = "*"
+"flake8" = "*"
+
+[packages]
+gunicorn = "==19.7.1"
+flask = "*"
+flask-login = "*"
+python-dateutil = "*"
+peewee = "*"
+flask-cors = "*"
+Jinja2 = ">=2.10.1"
+pika = "*"
+authlib = "*"
+requests = "*"
+
+[requires]
+python_version = "3.6"
+
+[pipenv]
+allow_prereleases = true
