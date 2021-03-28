@@ -1,18 +1,18 @@
-FROM python:3-stretch AS build
+FROM python:3-buster AS build
 LABEL maintainer="norbert@not7cd.net"
 
-RUN pip3 install pipenv
+ENV PYTHONPATH=${PYTHONPATH}:${PWD} 
+RUN pip3 install poetry
+RUN poetry config virtualenvs.create false
 
-COPY Pipfile Pipfile.lock /tmp/
-ENV PIPENV_PIPFILE /tmp/Pipfile
-RUN pipenv install --deploy --system
+COPY pyproject.toml poetry.lock /app/ 
 
 WORKDIR /app
+RUN poetry install --no-dev
 COPY . .
 
 #default config
 ENV SECRET_KEY secret
-ENV PYTHONPATH /app
 ENV DB_PATH /data/whoisdevices.db
 
 RUN mkdir /data && chown nobody /data
