@@ -15,11 +15,11 @@
 <h3>API</h3>
 <p>
     Dostępne jest proste API udostępniające aktualne dane w JSON'nie
-    <br><kbd>https://{{ base_url }}/api/now</kbd>
+    <br><kbd>{{ app.base_url }}/api/now</kbd>
 </p>
 <p>
     Można spytać o dowolny okres wstecz
-    <br><kbd>https://{{ base_url }}/api/now?days=3&hours=2&minutes=13</kbd>
+    <br><kbd>{{ app.base_url }}/api/now?days=3&hours=2&minutes=13</kbd>
 </p>
 
 {% endblock %}

@@ -2,12 +2,12 @@
      style="font-family: monospace !important; margin-top: auto;">
     <div class="container">
         <nav class="nav">
-            <a class="nav-link text-light" href="//hsp.sh">home</a>
-            <a class="nav-link text-light" href="//wiki.hsp.sh/projekty/whois">wiki</a>
-            <a class="nav-link text-light" href="//github.com/hs3city/whois">repo</a>
+            <a class="nav-link text-light" href="{{ app.home_url }}">home</a>
+            <a class="nav-link text-light" href="{{ app.wiki_url }}">wiki</a>
+            <a class="nav-link text-light" href="{{ app.repo_url }}">repo</a>
         </nav>
         <nav class="nav justify-content-end">
-            <a class="nav-link disabled" href="#">{{ version }}</a>
+            <a class="nav-link disabled" href="#">{{ app.name }} {{ app.version }}</a>
         </nav>
     </div>
 </nav>

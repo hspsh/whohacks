@@ -11,7 +11,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>{% block title %}{{ site_name }}{% endblock %}</title>
+    <title>{% block title %}{{ app.title }}{% endblock %}</title>
 
     <!-- Bootstrap -->
     <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,700" rel="stylesheet">
@@ -31,7 +31,7 @@
 <div class="container">
     {% block header %}
         <nav class="nav">
-            <a class="navbar-brand" href="/">{{ self.title() }}</a>
+            <a class="navbar-brand" href="/">{{ app.title }}</a>
             {% if current_user.is_anonymous %}
                 <a class="nav-link" href="/login">login</a>
                 <a class="nav-link" href="/register">register</a>

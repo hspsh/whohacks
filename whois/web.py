@@ -1,4 +1,3 @@
-__version__ = "1.3.0"
 import json
 import logging
 import os
@@ -45,7 +44,9 @@ login_manager.init_app(app)
 
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-common_vars_tpl = {"version": __version__, "site_name": settings.name, "base_url": settings.base_url}
+common_vars_tpl = {
+    "app": app.config.get_namespace('APP_')
+}
 
 
 @login_manager.user_loader

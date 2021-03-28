@@ -10,14 +10,16 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-connection = pika.BlockingConnection(pika.ConnectionParameters(host=os.environ['MQ_HOST']))
+connection = pika.BlockingConnection(
+    pika.ConnectionParameters(host=os.environ["MQ_HOST"])
+)
 channel = connection.channel()
 
 
 result = channel.queue_declare(queue="whohacks", exclusive=False)
 queue_name = result.method.queue
 
-channel.queue_bind(exchange=os.environ['MQ_EXCHANGE'], queue=queue_name, routing_key="")
+channel.queue_bind(exchange=os.environ["MQ_EXCHANGE"], queue=queue_name, routing_key="")
 
 logger.info(" [*] Waiting for logs. To exit press CTRL+C")
 
