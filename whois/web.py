@@ -21,6 +21,7 @@ from flask_login import (
     login_user,
     logout_user,
 )
+from authlib.integrations.flask_client import OAuth
 
 from whois import settings
 from whois.database import db, Device, User
@@ -38,9 +39,18 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-app.secret_key = os.environ["SECRET_KEY"]
+app.config.from_object("whois.settings")
 login_manager = LoginManager()
 login_manager.init_app(app)
+
+if settings.oidc_enabled:
+    oauth = OAuth(app)
+    oauth.register(
+        "sso",
+        server_metadata_url="http://sso.hsp.sh/auth/realms/hsp/.well-known/openid-configuration",
+        client_kwargs={"scope": "openid profile email"},
+    )
+
 
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
@@ -55,7 +65,6 @@ def load_user(user_id):
         return User.get_by_id(user_id)
     except User.DoesNotExist as exc:
         app.logger.error("{}".format(exc))
-        app.logger.error("return None")
         return None
 
 
@@ -296,10 +305,10 @@ def register():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    """Login using naive db or LDAP (work on it @priest)"""
+    """Login using query to DB or SSO"""
     if current_user.is_authenticated:
         app.logger.error("Shouldn't login when auth")
-        flash("Shouldn't login when auth", "error")
+        flash("You are already logged in", "error")
         return redirect(url_for("devices"))
 
     if request.method == "POST":
@@ -322,7 +331,44 @@ def login():
             app.logger.info("failed log in: {}".format(request.form["username"]))
             flash("Invalid credentials", "error")
 
-    return render_template("login.html", **common_vars_tpl)
+    return render_template(
+        "login.html", oauth_enabled=settings.oidc_enabled, **common_vars_tpl
+    )
+
+
+@app.route("/login/oauth")
+def login_oauth():
+    redirect_uri = url_for("callback", _external=True)
+    return oauth.sso.authorize_redirect(redirect_uri)
+
+
+@app.route("/login/callback")
+def callback():
+    token = oauth.sso.authorize_access_token()
+    user_info = oauth.sso.parse_id_token(token)
+    if user_info:
+        print(user_info)
+        try:
+            user = User.get(User.username == user_info["preferred_username"])
+        except User.DoesNotExist:
+            user = None
+            app.logger.warning("no user: {}".format(user_info["preferred_username"]))
+
+        if user is not None:
+            login_user(user)
+            app.logger.info("logged in: {}".format(user.username))
+            flash(
+                "Hello {}! You can now claim and manage your devices.".format(
+                    current_user.username
+                ),
+                "success",
+            )
+            return redirect(url_for("devices"))
+        else:
+            app.logger.info("failed log in: {}".format(user_info["preferred_username"]))
+            flash("Invalid credentials", "error")
+    return redirect(url_for("login"))
+    
 
 
 @app.route("/logout")
