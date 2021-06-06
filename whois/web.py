@@ -56,9 +56,6 @@ cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 common_vars_tpl = {
     "app": app.config.get_namespace('APP_')
-    "version": __version__,
-    "site_name": settings.name,
-    "base_url": settings.base_url,
 }
 
 
@@ -308,7 +305,7 @@ def register():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    """Login using naive db or LDAP (work on it @priest)"""
+    """Login using query to DB or SSO"""
     if current_user.is_authenticated:
         app.logger.error("Shouldn't login when auth")
         flash("You are already logged in", "error")
@@ -355,7 +352,7 @@ def callback():
             user = User.get(User.username == user_info["preferred_username"])
         except User.DoesNotExist:
             user = None
-            app.logger.error("no user: {}".format(user_info["preferred_username"]))
+            app.logger.warning("no user: {}".format(user_info["preferred_username"]))
 
         if user is not None:
             login_user(user)
