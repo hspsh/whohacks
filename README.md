@@ -3,17 +3,17 @@
 
 ## Prerequisities
 
-- Pipenv
+- poetry
 
 ## Instalation
 
 - Dependencies
 
 ```shell
-pipenv install
+poetry install
 ```
 
-- Create .env file
+- Create .env file, buy it doesn't work. Go figure
 
 ```shell
 cat >> .env <<EOF
@@ -25,17 +25,15 @@ EOF
 - Create database
 
 ```shell
-pipenv run python helpers/db_create.py
+poetry run python helpers/db_create.py
 # or
-pipenv run init-db
+poetry run init-db
 ```
 
 ## Running
 
 ```shell
-pipenv run python -m whois
-# or
-pipenv run serve
+poetry run python -m whois
 ```
 
 ## Deployment
