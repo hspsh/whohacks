@@ -14,12 +14,12 @@ jobs:
           module: .
           args: >-
             build-and-push
-            --git-ref=$GITHUB_REF
-            --git-commit=$GITHUB_SHA
+            --git-ref=env:GITHUB_REF
+            --git-commit=env:GITHUB_SHA
             --registry=ghcr.io
             --image-name=whohacks
-            --registry-user=$GITHUB_ACTOR
-            --registry-token=$GITHUB_TOKEN
+            --registry-user=env:GITHUB_ACTOR
+            --registry-token=env:GITHUB_TOKEN
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
