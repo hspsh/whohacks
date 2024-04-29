@@ -10,5 +10,13 @@ jobs:
       - name: Call Dagger workflow
         uses: dagger/dagger-for-github@v5
         with:
-          verb: run
-          args: python helpers/build.py
+          verb: call
+          module: build-and-push
+          args: >
+            --git-ref=$GITHUB_REF
+            --git-commit=$GITHUB_SHA
+            --registry=ghcr.io
+            --image-name=whohacks
+            --registry-user=$GITHUB_ACTOR
+            --registry-token=env:GITHUB_TOKEN
+
