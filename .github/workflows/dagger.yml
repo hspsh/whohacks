@@ -20,4 +20,6 @@ jobs:
             --image-name=whohacks
             --registry-user=$GITHUB_ACTOR
             --registry-token=$GITHUB_TOKEN
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
