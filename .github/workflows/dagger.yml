@@ -12,7 +12,7 @@ jobs:
         with:
           verb: call
           module: build-and-push
-          args: >
+          args: >-
             --git-ref=env:GITHUB_REF
             --git-commit=env:GITHUB_SHA
             --registry=ghcr.io
