@@ -30,7 +30,7 @@
         <td>{{ device.hostname }}</td>
         <td>{{ flag_badge(device.is_hidden, 'hidden') }}{{ flag_badge(device.is_esp, 'esp') }}{{ flag_badge(device.is_infrastructure, 'infrastructure') }}</td>
         <td>{{ owner }}</td>
-        <td>{{ device.last_seen.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+        <td>{{ (device.last_seen | local_time).strftime('%Y-%m-%d %H:%M:%S') }}</td>
     </tr>
 {%- endmacro %}
 

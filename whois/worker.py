@@ -1,34 +1,50 @@
-import os
+from datetime import datetime, timezone
 import logging
+import time
 
-import pika
-
-from datetime import datetime
+from whois import settings
 from whois.database import db, Device
+from whois.mikrotik import fetch_leases
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-
-connection = pika.BlockingConnection(
-    pika.ConnectionParameters(host=os.environ["MQ_HOST"])
-)
-channel = connection.channel()
+logger = logging.getLogger("mikrotik-worker")
 
 
-result = channel.queue_declare(queue="whohacks", exclusive=False)
-queue_name = result.method.queue
+def update_devices() -> int:
+    leases = fetch_leases(
+        settings.MIKROTIK_URL, settings.MIKROTIK_USER, settings.MIKROTIK_PASS
+    )
 
-channel.queue_bind(exchange=os.environ["MQ_EXCHANGE"], queue=queue_name, routing_key="")
+    for lease in leases:
+        with db.atomic():
+            last_seen_date = datetime.now(timezone.utc) - lease.last_seen
+            Device.update_or_create(
+                mac_address=lease.mac_address,
+                last_seen=last_seen_date,
+                hostname=lease.host_name,
+            )
 
-logger.info(" [*] Waiting for logs. To exit press CTRL+C")
+    return len(leases)
 
 
-def callback(ch, method, properties, body):
-    logger.info(" [x] %r:%r" % (method.routing_key, body))
-    Device.update_or_create(mac_address=body.decode().upper(), last_seen=datetime.now())
+def run_worker():
+    if not all([settings.MIKROTIK_URL, settings.MIKROTIK_USER, settings.MIKROTIK_PASS]):
+        raise ValueError("Mikrotik settings not set")
+
+    while True:
+        try:
+            logger.info("Updating device information")
+            count = update_devices()
+            logger.info(f"Updated information for {count} devices")
+        except Exception:
+            logger.exception("Could not update device information")
+
+        time.sleep(settings.worker_frequency_s)
 
 
-channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
-
-channel.start_consuming()
+if __name__ == "__main__":
+    logging.basicConfig(
+        format="[%(asctime)s] %(name)s [%(levelname)s]: %(msg)s",
+        level=logging.INFO,
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+    run_worker()
