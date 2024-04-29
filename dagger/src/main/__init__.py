@@ -14,10 +14,11 @@ class Whohacks:
         image_name: str,
         registry_user: str,
         registry_token: dagger.Secret,
+        project_dir: dagger.Directory,
     ) -> str:
         ctr = (
             dag.container()
-            .build(dag.host().directory("."), dockerfile="docker/web/Dockerfile")
+            .build(project_dir, dockerfile="docker/web/Dockerfile")
             .with_registry_auth(registry, registry_user, registry_token)
         )
 

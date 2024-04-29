@@ -14,10 +14,11 @@ jobs:
           module: .
           args: >-
             build-and-push
+            --project-dir=.
             --git-ref=env:GITHUB_REF
             --git-commit=env:GITHUB_SHA
             --registry=ghcr.io
-            --image-name=whohacks
+            --image-name=spotty-kiwi/whohacks
             --registry-user=env:GITHUB_ACTOR
             --registry-token=env:GITHUB_TOKEN
         env:
