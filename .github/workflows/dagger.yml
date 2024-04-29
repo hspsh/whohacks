@@ -13,10 +13,10 @@ jobs:
           verb: call
           module: build-and-push
           args: >
-            --git-ref=$GITHUB_REF
-            --git-commit=$GITHUB_SHA
+            --git-ref=env:GITHUB_REF
+            --git-commit=env:GITHUB_SHA
             --registry=ghcr.io
             --image-name=whohacks
-            --registry-user=$GITHUB_ACTOR
+            --registry-user=env:GITHUB_ACTOR
             --registry-token=env:GITHUB_TOKEN
 
