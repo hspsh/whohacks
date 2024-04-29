@@ -15,11 +15,11 @@ jobs:
           args: >-
             build-and-push
             --project-dir=.
-            --git-ref=env:GITHUB_REF
-            --git-commit=env:GITHUB_SHA
+            --git-ref=$GITHUB_REF
+            --git-commit=$GITHUB_SHA
             --registry=ghcr.io
             --image-name=spotty-kiwi/whohacks
-            --registry-user=env:GITHUB_ACTOR
+            --registry-user=$GITHUB_ACTOR
             --registry-token=env:GITHUB_TOKEN
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
