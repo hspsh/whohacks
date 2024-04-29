@@ -6,6 +6,8 @@ from dagger import dag, function, object_type
 class Whohacks:
     @function
     async def build_and_push(
+        self,
+        *,
         git_ref: str,
         git_commit: str,
         registry: str,
