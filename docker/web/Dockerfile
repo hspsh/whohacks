@@ -1,4 +1,4 @@
-FROM python:3-buster AS build
+FROM python:3.12 AS build
 LABEL maintainer="norbert@not7cd.net"
 
 ENV PYTHONPATH=${PYTHONPATH}:${PWD} 
