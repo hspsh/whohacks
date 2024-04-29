@@ -11,6 +11,7 @@ jobs:
         uses: dagger/dagger-for-github@v5
         with:
           verb: call
+          module: .
           args: >-
             build-and-push
             --git-ref=env:GITHUB_REF
