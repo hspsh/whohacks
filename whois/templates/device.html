@@ -3,7 +3,7 @@
     <h2>Device {{ device.mac_address }}</h2>
 
     <p class="lead">
-        This device was last seen: {{ device.last_seen }} <br>
+        This device was last seen: {{ device.last_seen | local_time }} <br>
         {% if device.owner == None and current_user.is_authenticated%}
         <form action="" method="post">
             <button name="action" id="action" value="claim" type="submit"

@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import peewee as pw
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -73,10 +73,22 @@ class User(pw.Model):
         return check_password_hash(self.password, password)
 
 
+class IsoDateTimeField(pw.DateTimeField):
+    field_type = "DATETIME"
+
+    def db_value(self, value: datetime) -> str:
+        if value:
+            return value.isoformat()
+
+    def python_value(self, value: str) -> datetime:
+        if value:
+            return datetime.fromisoformat(value)
+
+
 class Device(pw.Model):
     mac_address = pw.FixedCharField(primary_key=True, unique=True, max_length=17)
     hostname = pw.CharField(null=True)
-    last_seen = pw.DateTimeField()
+    last_seen = IsoDateTimeField()
     owner = pw.ForeignKeyField(
         User, backref="devices", column_name="user_id", null=True
     )
@@ -103,7 +115,7 @@ class Device(pw.Model):
         :param seconds:
         :return: list of devices
         """
-        recent_time = datetime.now() - timedelta(
+        recent_time = datetime.now(timezone.utc) - timedelta(
             days=days, hours=hours, minutes=minutes, seconds=seconds
         )
         devices = list(

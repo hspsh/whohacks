@@ -1,6 +1,4 @@
-import json
 import logging
-import os
 from datetime import datetime
 
 from flask import (
@@ -33,7 +31,6 @@ from whois.helpers import (
     ip_range,
     in_space_required,
 )
-from whois.mikrotik import parse_mikrotik_data
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -57,6 +54,11 @@ cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 common_vars_tpl = {
     "app": app.config.get_namespace('APP_')
 }
+
+
+@app.template_filter("local_time")
+def local_time(dt: datetime):
+    return dt.astimezone(settings.APP_TIMEZONE)
 
 
 @login_manager.user_loader
@@ -158,51 +160,6 @@ def now_at_space():
     app.logger.info("sending request for /api/now {}".format(data))
 
     return jsonify(data)
-
-
-@app.route("/api/last_seen", methods=["POST"])
-def last_seen_devices():
-    """
-    Post last seen devices to database
-    :return: status code
-    """
-    if request.headers.getlist("X-Forwarded-For"):
-        ip_addr = request.headers.getlist("X-Forwarded-For")[0]
-        logger.info(
-            "forward from %s to %s",
-            request.remote_addr,
-            request.headers.getlist("X-Forwarded-For")[0],
-        )
-    else:
-        ip_addr = request.remote_addr
-
-    if any(ip_range(whitelist_addr, ip_addr) for whitelist_addr in settings.whitelist):
-        app.logger.info("request from whitelist: {}".format(ip_addr))
-
-        if request.headers.get("User-Agent") == "Mikrotik/6.x Fetch":
-            app.logger.info("got data from mikrotik")
-            try:
-                data = json.loads(request.values.get("data", []))
-            except Exception as exc:
-                app.logger.error("malformed request")
-                return abort(400)
-            parsed_data = parse_mikrotik_data(datetime.now(), data)
-        else:
-            app.logger.warning("bad request \n{}".format(request.headers))
-            return abort(400)
-
-        app.logger.info("parsed data, got {} devices".format(len(parsed_data)))
-
-        with db.atomic():
-            for dev in parsed_data:
-                Device.update_or_create(**dev)
-
-        app.logger.info("updated last seen devices")
-
-        return "OK", 200
-    else:
-        app.logger.warning("request from outside whitelist: {}".format(ip_addr))
-        return abort(403)
 
 
 def set_device_flags(device, new_flags):
