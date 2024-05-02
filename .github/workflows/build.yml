@@ -1,0 +1,23 @@
+name: Build and push Docker image
+on: push
+jobs:
+  build-and-push-docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: docker build . -f docker/web/Dockerfile -t hspsh/whohacks
+      - run: echo "::set-output name=TAG::$(git describe --tags 2>/dev/null)"
+        name: Check if commit is tagged
+        id: check-tag
+      - if: ${{ steps.check-tag.outputs.TAG != '' }}
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - if: ${{ steps.check-tag.outputs.TAG != '' }}
+        name: Push image
+        run: |
+          TAG=${{ steps.check-tag.outputs.TAG }}
+          docker tag hspsh/whohacks ghcr.io/hspsh/whohacks:$TAG
+          docker push ghcr.io/hspsh/whohacks:$TAG
