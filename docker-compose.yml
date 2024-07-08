@@ -5,6 +5,7 @@ services:
     ports:
       - '5672:5672'
       - '15672:15672'
+
   web:
     build: ./docker/web
     environment:
@@ -18,6 +19,18 @@ services:
       - database:/data
       - /etc/localtime:/etc/localtime:ro
     restart: always
+
+  postgres:
+    image: postgres:latest
+    ports:
+      - 5432:5432
+    volumes:
+      - ~/apps/postgres:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=S3cret
+      - POSTGRES_USER=whohacks
+      - POSTGRES_DB=whohacks
+
   worker:
     build: ./docker/worker
     environment:

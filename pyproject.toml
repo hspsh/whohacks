@@ -5,7 +5,7 @@ description = ""
 authors = ["Norbert Szulc <norbert@not7cd.net>"]
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = "^3.11"
 authlib = "0.15.3"
 certifi = "2023.7.22"
 cffi = "1.14.5"
@@ -29,6 +29,7 @@ six = "1.15.0"
 urllib3 = "1.26.18"
 werkzeug = "1.0.1"
 pytz = "^2024.1"
+psycopg2-binary = "^2.9.9"
 
 [tool.poetry.dev-dependencies]
 
