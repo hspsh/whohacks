@@ -44,7 +44,7 @@ if settings.oidc_enabled:
     oauth = OAuth(app)
     oauth.register(
         "sso",
-        server_metadata_url="http://sso.hsp.sh/auth/realms/hsp/.well-known/openid-configuration",
+        server_metadata_url=settings.SSO_PROVIDER,
         client_kwargs={"scope": "openid profile email"},
     )
 
