@@ -16,10 +16,7 @@ poetry install
 - Create .env file, buy it doesn't work. Go figure
 
 ```shell
-cat >> .env <<EOF
-PYTHONPATH=.
-SECRET_KEY=<your_secret_key>
-EOF
+source env.sh
 ```
 
 - Create database

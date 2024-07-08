@@ -17,9 +17,9 @@ APP_REPO_URL = "//github.com/hspsh/whohacks"
 
 APP_TIMEZONE = timezone(os.environ.get("APP_TIMEZONE", "Europe/Warsaw"))
 
-MIKROTIK_URL = os.environ.get("MIKROTIK_URL")
-MIKROTIK_USER = os.environ.get("MIKROTIK_USER")
-MIKROTIK_PASS = os.environ.get("MIKROTIK_PASS")
+MIKROTIK_URL = os.environ.get("APP_MIKROTIK_URL")
+MIKROTIK_USER = os.environ.get("APP_MIKROTIK_USER")
+MIKROTIK_PASS = os.environ.get("APP_MIKROTIK_PASS")
 
 # mikrtotik ip, or other reporting devices
 
@@ -33,11 +33,12 @@ worker_frequency_s = 60
 
 oidc_enabled = True
 # OAuth settings
-SSO_CLIENT_ID = os.environ.get("OAUTH_CLIENT_ID")
-SSO_CLIENT_SECRET = os.environ.get("OAUTH_CLIENT_SECRET")
-SSO_AUTH_URL = os.environ.get("OAUTH_AUTH_URL")
-SSO_TOKEN_URL = os.environ.get("OAUTH_TOKEN_URL")
-SSO_USERINFO_URL = os.environ.get("OAUTH_USERINFO_URL")
+SSO_CLIENT_ID = os.environ.get("APP_OAUTH_CLIENT_ID")
+SSO_CLIENT_SECRET = os.environ.get("APP_OAUTH_CLIENT_SECRET")
+SSO_AUTH_URL = os.environ.get("APP_OAUTH_AUTH_URL")
+SSO_TOKEN_URL = os.environ.get("APP_OAUTH_TOKEN_URL")
+SSO_USERINFO_URL = os.environ.get("APP_OAUTH_USERINFO_URL")
+APP_OAUTH_OPENID = os.environ.get("APP_OAUTH_OPENID")
 
 # production
 ip_mask = "192.168.88.1-255"
