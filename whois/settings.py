@@ -33,11 +33,9 @@ worker_frequency_s = 60
 
 oidc_enabled = True
 # OAuth settings
+SSO_PROVIDER = os.environ.get("OAUTH_PROVIDER")
 SSO_CLIENT_ID = os.environ.get("OAUTH_CLIENT_ID")
 SSO_CLIENT_SECRET = os.environ.get("OAUTH_CLIENT_SECRET")
-SSO_AUTH_URL = os.environ.get("OAUTH_AUTH_URL")
-SSO_TOKEN_URL = os.environ.get("OAUTH_TOKEN_URL")
-SSO_USERINFO_URL = os.environ.get("OAUTH_USERINFO_URL")
 
 # production
 ip_mask = "192.168.88.1-255"
