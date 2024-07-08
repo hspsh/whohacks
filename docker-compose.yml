@@ -1,17 +1,18 @@
 version: '3'
 services:
-  rabbitmq:
-    image: 'rabbitmq:3.6-management-alpine'
-    ports:
-      - '5672:5672'
-      - '15672:15672'
-
   web:
-    build: ./docker/web
+    build: .
     environment:
       # you should change secret key
       - SECRET_KEY=<your_secret_key>
-      - DB_PATH=/data/whoisdevices.db
+      - APP_DB_DIALECT=postgresql
+      - APP_DB_NAME=whohacks
+      - APP_DB_USER=whohacks
+      - APP_DB_PASSWORD=S3cret
+      - APP_DB_HOST=postgres
+      - APP_DB_PORT=5432
+      #- APP_OAUTH_OPENID="http://sso.hsp.sh/auth/realms/hsp/.well-known/openid-configuration"
+
     ports:
       # use 127.0.0.1:8000:8000
       - "8000:8000"
@@ -30,15 +31,6 @@ services:
       - POSTGRES_PASSWORD=S3cret
       - POSTGRES_USER=whohacks
       - POSTGRES_DB=whohacks
-
-  worker:
-    build: ./docker/worker
-    environment:
-      - DB_PATH=/data/whoisdevices.db
-    volumes:
-      - database:/data
-      - /etc/localtime:/etc/localtime:ro
-    restart: always
 
 volumes:
   database:

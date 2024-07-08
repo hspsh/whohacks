@@ -1,4 +1,4 @@
-export APP_DB_DIALECT="postgres"
+export APP_DB_DIALECT="postgresql"
 export APP_DB_NAME="whohacks"
 export APP_DB_USER="whohacks"
 export APP_DB_PASSWORD="S3cret"

@@ -20,7 +20,7 @@ elif db_dialect == "postgresql":
         db_name, user=db_user, password=db_password, host=db_host, port=db_port
     )
 else:
-    raise RuntimeError("Unknown db dialect (envvar APP_DB_DIALECT)")
+    raise RuntimeError(f"Unknown db dialect '{db_dialect}' (envvar APP_DB_DIALECT)")
 
 
 class User(pw.Model):
