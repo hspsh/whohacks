@@ -5,7 +5,7 @@ from pytz import timezone
 SECRET_KEY = os.environ["SECRET_KEY"]
 if not SECRET_KEY:
     raise ValueError("No SECRET_KEY set for Flask application")
-APP_VERSION = "1.3.1"
+APP_VERSION = "1.5.0"
 APP_TITLE = "👀 kto hakuje"
 APP_NAME = "Kto Hakuje"
 
