@@ -1,4 +1,5 @@
 import logging
+import os
 from datetime import datetime
 
 from flask import (
@@ -44,7 +45,7 @@ if settings.oidc_enabled:
     oauth = OAuth(app)
     oauth.register(
         "sso",
-        server_metadata_url="http://sso.hsp.sh/auth/realms/hsp/.well-known/openid-configuration",
+        server_metadata_url=settings.APP_OAUTH_OPENID,
         client_kwargs={"scope": "openid profile email"},
     )
 

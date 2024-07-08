@@ -5,22 +5,22 @@ import peewee as pw
 from werkzeug.security import check_password_hash, generate_password_hash
 
 
-db_dialect = os.environ.get("DB_DIALECT", "sqlite")
+db_dialect = os.environ.get("APP_DB_DIALECT", "sqlite")
 
 if db_dialect == "sqlite":
-    db_path = os.environ.get("DB_PATH", "whoisdevices.db")
+    db_path = os.environ.get("APP_DB_PATH", "whoisdevices.db")
     db = pw.SqliteDatabase(db_path)
 elif db_dialect == "postgresql":
-    db_name = os.environ.get("DB_NAME", "whohacks")
-    db_user = os.environ.get("DB_USER", "whohacks")
-    db_password = os.environ.get("DB_PASSWORD")
-    db_host = os.environ.get("DB_HOST", "localhost")
-    db_port = os.environ.get("DB_PORT", "5432")
+    db_name = os.environ.get("APP_DB_NAME", "whohacks")
+    db_user = os.environ.get("APP_DB_USER", "whohacks")
+    db_password = os.environ.get("APP_DB_PASSWORD")
+    db_host = os.environ.get("APP_DB_HOST", "localhost")
+    db_port = os.environ.get("APP_DB_PORT", "5432")
     db = pw.PostgresqlDatabase(
         db_name, user=db_user, password=db_password, host=db_host, port=db_port
     )
 else:
-    raise RuntimeError("Unknown db dialect (envvar DB_DIALECT)")
+    raise RuntimeError("Unknown db dialect (envvar APP_DB_DIALECT)")
 
 
 class User(pw.Model):
