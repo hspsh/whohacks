@@ -42,6 +42,5 @@ SSO_CLIENT_SECRET = os.environ.get("OAUTH_CLIENT_SECRET")
 APP_OAUTH_OPENID = os.environ.get("APP_OAUTH_OPENID")
 
 # production
-ip_mask = "192.168.88.1-255"
-# TODO: better way for handling dev env
-# ip_mask = "127.0.0.1"
+# ip_mask = "192.168.88.1-255"
+ip_mask = os.environ.get("APP_IP_MASK")
