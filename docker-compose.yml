@@ -18,7 +18,8 @@ services:
       # use 127.0.0.1:8000:8000
       - "8000:8000"
     volumes:
-      - sqlite:/data
+      - database_postgres:/data
+      - database_sqlite:/sqlite
       - /etc/localtime:/etc/localtime:ro
     depends_on:
       - postgres
@@ -29,12 +30,15 @@ services:
     ports:
       - 5432:5432
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - database_postgres:/var/lib/postgresql/data
     environment:
       - POSTGRES_PASSWORD=S3cret
       - POSTGRES_USER=whohacks
       - POSTGRES_DB=whohacks
 
 volumes:
-  sqlite:
-  postgres_data:
+  database_postgres:
+    driver: local
+
+  database_sqlite:
+    driver: local
