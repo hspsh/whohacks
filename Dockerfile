@@ -12,9 +12,6 @@ WORKDIR /app
 RUN poetry install --no-dev
 COPY . .
 
-#default config
-ENV SECRET_KEY S3cret
-
 RUN mkdir /data && chown nobody /data
 VOLUME ["/data"]
 

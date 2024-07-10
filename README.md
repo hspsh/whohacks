@@ -22,16 +22,25 @@ source env.sh
 - Create database
 
 ```shell
+# if running web app locally
 poetry run python helpers/db_create.py
-# or
-poetry run init-db
+# if running web app in docker
+docker compose run web python helpers/db_create.py
 ```
 
 ## Running
 
 ```shell
 poetry run python -m whois
+# or
+docker compose up
 ```
+
+## OAuth2 integration
+
+see: https://github.com/navikt/mock-oauth2-server
+
+configuration can be found in ./tests/resources
 
 ## Deployment
 
