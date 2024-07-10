@@ -42,6 +42,13 @@ see: https://github.com/navikt/mock-oauth2-server
 
 configuration can be found in ./tests/resources
 
+If you want for redirects to work properly you need to add mock oauth to `/etc/hosts`
+```bash
+echo "127.0.0.1 oauth.localhost" >> /etc/hosts
+```
+
+But if you can't, you can always change `oauth.localhost` to `localhost` in your browser when redirect fails.
+
 ## Deployment
 
 ```shell
