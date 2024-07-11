@@ -52,9 +52,7 @@ if settings.oidc_enabled:
 
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-common_vars_tpl = {
-    "app": app.config.get_namespace('APP_')
-}
+common_vars_tpl = {"app": app.config.get_namespace("APP_")}
 
 
 @app.template_filter("local_time")
@@ -111,7 +109,7 @@ def index():
         users=filter_anon_names(users),
         headcount=len(users),
         unknowncount=len(unclaimed_devices(recent)),
-        **common_vars_tpl
+        **common_vars_tpl,
     )
 
 
@@ -132,7 +130,7 @@ def devices():
             my_devices=mine,
             users=filter_anon_names(users),
             headcount=len(users),
-            **common_vars_tpl
+            **common_vars_tpl,
         )
 
 
@@ -314,13 +312,12 @@ def callback():
         try:
             user = User.get(User.username == user_info["preferred_username"])
         except User.DoesNotExist:
-            preferred_username = user_info["preferred_username"]
+            username = user_info["preferred_username"]
             app.logger.info(
-                f"No SSO-loggined user: {preferred_username}.\n"
-                f"Register user {preferred_username}",
+                f"No SSO-loggined user: {username}.\n"
+                f"Register user {username}",
             )
-            username = preferred_username
-            user = User.register(username, display_name=username)
+            user = User.register_from_sso(username=username, display_name=username)
 
         if user is not None:
             login_user(user)
