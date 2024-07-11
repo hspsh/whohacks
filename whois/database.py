@@ -6,7 +6,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from playhouse.db_url import connect
 
 
-db_url = os.environ.get("APP_DB_URL")
+db_url = os.environ.get("APP_DB_URL", "sqlite:///whohacks.sqlite")
 db = connect(db_url)
 
 
