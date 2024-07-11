@@ -26,7 +26,7 @@ else:
 class User(pw.Model):
     id = pw.PrimaryKeyField()
     username = pw.CharField(unique=True)
-    _password = pw.CharField(column_name="password")
+    _password = pw.CharField(column_name="password", null=True)
     display_name = pw.CharField()
     flags = pw.BitField(null=True)
 
@@ -52,6 +52,21 @@ class User(pw.Model):
         user.password = password
         return user
 
+    @classmethod
+    def register_from_sso(cls, username, display_name=None):
+        """
+        Creates user and hashes his password
+        :param username: used in login
+        :param display_name: displayed username
+        :return: user instance
+        """
+        # TODO: ehh
+        user = cls.create(
+            username=username, _password="todo", display_name=display_name
+        )
+        user.password = None
+        return user
+
     def __str__(self):
         if self.is_name_anonymous or self.is_hidden:
             return "anonymous"
@@ -73,6 +88,10 @@ class User(pw.Model):
         :return:
         """
         return False
+
+    @property
+    def is_sso(self):
+        return self.password == None
 
     @property
     def password(self):

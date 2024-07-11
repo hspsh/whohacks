@@ -31,7 +31,6 @@ from whois.helpers import (
     filter_anon_names,
     ip_range,
     in_space_required,
-    generate_strong_password,
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -276,9 +275,15 @@ def login():
         except User.DoesNotExist:
             user = None
 
-        if user is not None and user.auth(request.form["password"]) is True:
-            login_user(user)
-            app.logger.info("logged in: {}".format(user.username))
+        if user is not None:
+
+            if user.auth(request.form["password"]) is True:
+                login_user(user)
+                app.logger.info("logged in: {}".format(user.username))
+            else:
+                app.logger.info("Redirect to SSO user: {}".format(user.username))
+                return redirect(url_for("login_oauth"))
+
             flash(
                 "Hello {}! You can now claim and manage your devices.".format(
                     current_user.username
@@ -315,8 +320,7 @@ def callback():
                 f"Register user {preferred_username}",
             )
             username = preferred_username
-            password = generate_strong_password()
-            user = User.register(username, password, display_name=username)
+            user = User.register(username, display_name=username)
 
         if user is not None:
             login_user(user)
