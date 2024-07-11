@@ -62,7 +62,7 @@ class User(pw.Model):
         user = cls.create(
             username=username, display_name=display_name
         )
-        user.password = None
+        user._password = None
         return user
 
     def __str__(self):
