@@ -6,7 +6,8 @@ services:
     environment:
       # you should change secret key
       - SECRET_KEY=example123
-      - APP_DB_DIALECT=postgresql
+      - APP_DB_DIALECT=sqlite
+      - APP_DB_PATH=/sqlite/mydb.db
       - APP_DB_NAME=whohacks
       - APP_DB_USER=whohacks
       - APP_DB_PASSWORD=S3cret
@@ -18,8 +19,7 @@ services:
       # use 127.0.0.1:8000:8000
       - "8000:8000"
     volumes:
-      - database_postgres:/data
-      - database_sqlite:/sqlite
+      - ./data:/sqlite
       - /etc/localtime:/etc/localtime:ro
     depends_on:
       - postgres
@@ -38,7 +38,4 @@ services:
 
 volumes:
   database_postgres:
-    driver: local
-
-  database_sqlite:
     driver: local
