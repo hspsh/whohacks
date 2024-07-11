@@ -6,14 +6,8 @@ services:
     environment:
       # you should change secret key
       - SECRET_KEY=example123
-      - APP_DB_DIALECT=sqlite
-      - APP_DB_PATH=/sqlite/mydb.db
-      - APP_DB_NAME=whohacks
-      - APP_DB_USER=whohacks
-      - APP_DB_PASSWORD=S3cret
-      - APP_DB_HOST=postgres
-      - APP_DB_PORT=5432
-      - APP_OAUTH_OPENID=http://oauth2:8080/issuer1/.well-known/openid-configuration
+      - APP_DB_URL="postgresql://whohacks:S3cret@localhost:5432/whohacks"
+      - OAUTH_OPENID=http://oauth2:8080/issuer1/.well-known/openid-configuration
 
     ports:
       # use 127.0.0.1:8000:8000
