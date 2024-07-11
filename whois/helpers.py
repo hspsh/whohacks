@@ -4,6 +4,8 @@ from urllib.parse import urlparse, urljoin
 
 from flask import request, abort
 from whois.settings import ip_mask
+import string
+import secrets
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -73,3 +75,9 @@ def in_space_required():
         return func
 
     return decorator
+
+
+def generate_strong_password(length=16) -> str:
+    characters = string.ascii_letters + string.digits + string.punctuation
+    password = "".join(secrets.choice(characters) for _ in range(length))
+    return password

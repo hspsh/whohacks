@@ -31,6 +31,7 @@ from whois.helpers import (
     filter_anon_names,
     ip_range,
     in_space_required,
+    generate_strong_password,
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -305,12 +306,17 @@ def callback():
     token = oauth.sso.authorize_access_token()
     user_info = oauth.sso.parse_id_token(token)
     if user_info:
-        print(user_info)
         try:
             user = User.get(User.username == user_info["preferred_username"])
         except User.DoesNotExist:
-            user = None
-            app.logger.warning("no user: {}".format(user_info["preferred_username"]))
+            preferred_username = user_info["preferred_username"]
+            app.logger.info(
+                f"No SSO-loggined user: {preferred_username}.\n"
+                f"Register user {preferred_username}",
+            )
+            username = preferred_username
+            password = generate_strong_password()
+            user = User.register(username, password, display_name=username)
 
         if user is not None:
             login_user(user)
@@ -326,7 +332,6 @@ def callback():
             app.logger.info("failed log in: {}".format(user_info["preferred_username"]))
             flash("Invalid credentials", "error")
     return redirect(url_for("login"))
-    
 
 
 @app.route("/logout")
