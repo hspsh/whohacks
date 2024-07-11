@@ -4,19 +4,25 @@ services:
     build: .
     restart: unless-stopped
     environment:
+      - APP_DB_URL="postgresql://whohacks:S3cret@localhost:5432/whohacks"
+      - OAUTH_OPENID=http://oauth.localhost:8080/issuer1/.well-known/openid-configuration
+      - OAUTH_CLIENT_SECRET=12345678
+      - APP_IP_MASK=172.18.0.1
+      - OAUTH_CLIENT_ID=fake-development-client-id
       # you should change secret key
       - SECRET_KEY=example123
-      - APP_DB_URL="postgresql://whohacks:S3cret@localhost:5432/whohacks"
-      - OAUTH_OPENID=http://oauth2:8080/issuer1/.well-known/openid-configuration
 
     ports:
       # use 127.0.0.1:8000:8000
       - "8000:8000"
+    # network_mode: "host"
     volumes:
       - ./data:/sqlite
       - /etc/localtime:/etc/localtime:ro
     depends_on:
       - postgres
+    networks:
+      - default
 
   postgres:
     image: postgres:latest
@@ -29,6 +35,27 @@ services:
       - POSTGRES_PASSWORD=S3cret
       - POSTGRES_USER=whohacks
       - POSTGRES_DB=whohacks
+    networks:
+      - default
+
+  mock-oauth2-server:
+    image: ghcr.io/navikt/mock-oauth2-server:2.1.8
+    hostname: oauth.localhost
+    ports:
+      - "8080:8080"
+    # this
+    # network_mode: "host"
+    volumes:
+      - ./tests/resources/config.json:/app/config.json
+      - ./tests/resources/login.example.html:/app/login/login.example.html
+      - ./tests/resources/static/:/app/static/
+    environment:
+      LOG_LEVEL: "debug"
+      SERVER_PORT: 8080
+      # SERVER_HOSTNAME: localhost
+      JSON_CONFIG_PATH: /app/config.json
+    networks:
+      - default
 
 volumes:
   database_postgres:

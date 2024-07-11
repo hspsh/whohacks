@@ -33,14 +33,14 @@ worker_frequency_s = 60
 
 oidc_enabled = True
 # OAuth settings
-SSO_CLIENT_ID = os.environ.get("APP_OAUTH_CLIENT_ID")
-SSO_CLIENT_SECRET = os.environ.get("APP_OAUTH_CLIENT_SECRET")
-SSO_AUTH_URL = os.environ.get("APP_OAUTH_AUTH_URL")
-SSO_TOKEN_URL = os.environ.get("APP_OAUTH_TOKEN_URL")
-SSO_USERINFO_URL = os.environ.get("APP_OAUTH_USERINFO_URL")
+# TODO: cleanup, as we are getting everything from well-known endpoint
+SSO_CLIENT_ID = os.environ.get("OAUTH_CLIENT_ID")
+SSO_CLIENT_SECRET = os.environ.get("OAUTH_CLIENT_SECRET")
+# SSO_AUTH_URL = os.environ.get("APP_OAUTH_AUTH_URL")
+# SSO_TOKEN_URL = os.environ.get("APP_OAUTH_TOKEN_URL")
+# SSO_USERINFO_URL = os.environ.get("APP_OAUTH_USERINFO_URL")
 APP_OAUTH_OPENID = os.environ.get("APP_OAUTH_OPENID")
 
 # production
-ip_mask = "192.168.88.1-255"
-# TODO: better way for handling dev env
-# ip_mask = "127.0.0.1"
+# ip_mask = "192.168.88.1-255"
+ip_mask = os.environ.get("APP_IP_MASK")
