@@ -52,9 +52,7 @@ if settings.oidc_enabled:
 
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-common_vars_tpl = {
-    "app": app.config.get_namespace('APP_')
-}
+common_vars_tpl = {"app": app.config.get_namespace("APP_")}
 
 
 @app.template_filter("local_time")
@@ -111,7 +109,7 @@ def index():
         users=filter_anon_names(users),
         headcount=len(users),
         unknowncount=len(unclaimed_devices(recent)),
-        **common_vars_tpl
+        **common_vars_tpl,
     )
 
 
@@ -132,7 +130,7 @@ def devices():
             my_devices=mine,
             users=filter_anon_names(users),
             headcount=len(users),
-            **common_vars_tpl
+            **common_vars_tpl,
         )
 
 
@@ -275,9 +273,19 @@ def login():
         except User.DoesNotExist:
             user = None
 
-        if user is not None and user.auth(request.form["password"]) is True:
-            login_user(user)
-            app.logger.info("logged in: {}".format(user.username))
+        if user is not None:
+            if user.is_sso:
+                # User created via sso -> redirect to sso login
+                app.logger.info("Redirect to SSO user: {}".format(user.username))
+                return redirect(url_for("login_oauth"))            
+            elif user.auth(request.form["password"]) is True:
+                # User password hash match -> login user successfully
+                login_user(user)
+                app.logger.info("logged in: {}".format(user.username))
+            else:
+                pass
+
+        if current_user.is_authenticated:
             flash(
                 "Hello {}! You can now claim and manage your devices.".format(
                     current_user.username
@@ -305,12 +313,15 @@ def callback():
     token = oauth.sso.authorize_access_token()
     user_info = oauth.sso.parse_id_token(token)
     if user_info:
-        print(user_info)
         try:
             user = User.get(User.username == user_info["preferred_username"])
         except User.DoesNotExist:
-            user = None
-            app.logger.warning("no user: {}".format(user_info["preferred_username"]))
+            username = user_info["preferred_username"]
+            app.logger.info(
+                f"No SSO-loggined user: {username}.\n"
+                f"Register user {username}",
+            )
+            user = User.register_from_sso(username=username, display_name=username)
 
         if user is not None:
             login_user(user)
@@ -326,7 +337,6 @@ def callback():
             app.logger.info("failed log in: {}".format(user_info["preferred_username"]))
             flash("Invalid credentials", "error")
     return redirect(url_for("login"))
-    
 
 
 @app.route("/logout")
