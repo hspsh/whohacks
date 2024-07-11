@@ -88,8 +88,8 @@ class User(pw.Model):
         return False
 
     @property
-    def is_sso(self):
-        return self.password == None
+    def is_sso(self) -> bool:
+        return not self._password
 
     @property
     def password(self):

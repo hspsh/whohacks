@@ -274,14 +274,18 @@ def login():
             user = None
 
         if user is not None:
-
-            if user.auth(request.form["password"]) is True:
+            if user.is_sso:
+                # User created via sso -> redirect to sso login
+                app.logger.info("Redirect to SSO user: {}".format(user.username))
+                return redirect(url_for("login_oauth"))            
+            elif user.auth(request.form["password"]) is True:
+                # User password hash match -> login user successfully
                 login_user(user)
                 app.logger.info("logged in: {}".format(user.username))
             else:
-                app.logger.info("Redirect to SSO user: {}".format(user.username))
-                return redirect(url_for("login_oauth"))
+                pass
 
+        if current_user.is_authenticated:
             flash(
                 "Hello {}! You can now claim and manage your devices.".format(
                     current_user.username
