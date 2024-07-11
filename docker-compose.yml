@@ -4,13 +4,13 @@ services:
     build: .
     restart: unless-stopped
     environment:
+      # you should change secret key
+      - SECRET_KEY=example123
       - APP_DB_URL="postgresql://whohacks:S3cret@localhost:5432/whohacks"
       - OAUTH_OPENID=http://oauth.localhost:8080/issuer1/.well-known/openid-configuration
       - OAUTH_CLIENT_SECRET=12345678
       - APP_IP_MASK=172.18.0.1
       - OAUTH_CLIENT_ID=fake-development-client-id
-      # you should change secret key
-      - SECRET_KEY=example123
 
     ports:
       # use 127.0.0.1:8000:8000
