@@ -45,9 +45,8 @@ class User(pw.Model):
         :param display_name: displayed username
         :return: user instance
         """
-        # TODO: ehh
         user = cls.create(
-            username=username, _password="todo", display_name=display_name
+            username=username, display_name=display_name
         )
         user.password = password
         return user
@@ -55,14 +54,13 @@ class User(pw.Model):
     @classmethod
     def register_from_sso(cls, username, display_name=None):
         """
-        Creates user and hashes his password
+        Creates user without any password. Such users can only login via SSO.
         :param username: used in login
         :param display_name: displayed username
         :return: user instance
         """
-        # TODO: ehh
         user = cls.create(
-            username=username, _password="todo", display_name=display_name
+            username=username, display_name=display_name
         )
         user.password = None
         return user
