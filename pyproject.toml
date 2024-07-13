@@ -7,7 +7,7 @@ authors = ["Norbert Szulc <norbert@not7cd.net>"]
 [tool.poetry.dependencies]
 python = "^3.11"
 authlib = "0.15.3"
-certifi = "2023.7.22"
+certifi = "2024.7.4"
 cffi = "1.14.5"
 chardet = "4.0.0"
 click = "7.1.2"
