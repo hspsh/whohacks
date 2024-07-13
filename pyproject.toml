@@ -30,6 +30,7 @@ urllib3 = "1.26.18"
 werkzeug = "1.0.1"
 pytz = "^2024.1"
 psycopg2-binary = "^2.9.9"
+pysqlite3 = "^0.5.3"
 
 [tool.poetry.dev-dependencies]
 

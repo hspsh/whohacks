@@ -6,23 +6,18 @@ services:
     environment:
       # you should change secret key
       - SECRET_KEY=example123
-      - APP_IP_MASK=172.18.0.1
-      - APP_DB_DIALECT=postgresql
-      - APP_DB_NAME=whohacks
-      - APP_DB_USER=whohacks
-      - APP_DB_PASSWORD=S3cret
-      - APP_DB_HOST=postgres
-      - APP_DB_PORT=5432
-      - OAUTH_CLIENT_ID=fake-development-client-id
+      - APP_DB_URL="postgresql://whohacks:S3cret@localhost:5432/whohacks"
+      - OAUTH_OPENID=http://oauth.localhost:8080/issuer1/.well-known/openid-configuration
       - OAUTH_CLIENT_SECRET=12345678
-      - APP_OAUTH_OPENID=http://oauth.localhost:8080/issuer1/.well-known/openid-configuration
+      - APP_IP_MASK=172.18.0.1
+      - OAUTH_CLIENT_ID=fake-development-client-id
 
     ports:
       # use 127.0.0.1:8000:8000
       - "8000:8000"
     # network_mode: "host"
     volumes:
-      - sqlite:/data
+      - ./data:/sqlite
       - /etc/localtime:/etc/localtime:ro
     depends_on:
       - postgres
@@ -35,7 +30,7 @@ services:
     ports:
       - 5432:5432
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - database_postgres:/var/lib/postgresql/data
     environment:
       - POSTGRES_PASSWORD=S3cret
       - POSTGRES_USER=whohacks
@@ -63,5 +58,5 @@ services:
       - default
 
 volumes:
-  sqlite:
-  postgres_data:
+  database_postgres:
+    driver: local
