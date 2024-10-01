@@ -10,7 +10,6 @@ services:
       - OAUTH_OPENID=http://oauth.localhost:8080/issuer1/.well-known/openid-configuration
       - OAUTH_CLIENT_SECRET=12345678
       - APP_IP_MASK=172.18.0.1
-      - OAUTH_CLIENT_ID=fake-development-client-id
 
     ports:
       # use 127.0.0.1:8000:8000
