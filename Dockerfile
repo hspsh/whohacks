@@ -7,6 +7,7 @@ RUN poetry config virtualenvs.create false
 
 COPY pyproject.toml /app/
 COPY poetry.lock /app/
+COPY whois /app/whois/
 
 WORKDIR /app
 RUN poetry install --only main
