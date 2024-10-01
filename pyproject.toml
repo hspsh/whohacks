@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "whois"
+name = "whohacks"
 version = "1.5.0"
 description = ""
 authors = ["Norbert Szulc <norbert@not7cd.net>"]
