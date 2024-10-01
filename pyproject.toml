@@ -3,6 +3,7 @@ name = "whohacks"
 version = "1.5.0"
 description = ""
 authors = ["Norbert Szulc <norbert@not7cd.net>"]
+packages = [{ include = "whois" }]
 
 [tool.poetry.dependencies]
 python = "^3.11"
