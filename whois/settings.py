@@ -43,4 +43,4 @@ APP_OAUTH_OPENID = os.environ.get("APP_OAUTH_OPENID")
 
 # production
 # ip_mask = "192.168.88.1-255"
-ip_mask = os.environ.get("APP_IP_MASK")
+ip_mask = os.environ.get("APP_IP_MASK", "192.168.88.1-255")
