@@ -27,11 +27,18 @@ poetry run python helpers/db_create.py
 
 ### Setup Environment Variables
 
-Set the `SECRET_KEY` variable:
+Set the following environment variables:
 
-Windows: `set SECRET_KEY=example123`.
+1. `SECRET_KEY`
+2. `APP_IP_MASK` - A mask that filters the allowed IP's, allowing blocking
+   requests outside of the accepted network. For the local development purposes
+   this can be set to `127.0.0.1` to allow requests only from the host machine.
 
-Linux: `export SECRET_KEY=example123`.
+Example of setting environemnt variables:
+
+- Windows: `set SECRET_KEY=example123`.
+
+- Linux: `export SECRET_KEY=example123`.
 
 ### Launch the web server
 
