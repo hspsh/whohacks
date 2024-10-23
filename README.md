@@ -1,4 +1,5 @@
 # whohacks @ hsp.sh?
+
 [![Build status](https://github.com/hspsh/whohacks/actions/workflows/build.yml/badge.svg)](https://github.com/hspsh/whohacks/actions/workflows/build.yml) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
 ## Prerequisities
@@ -7,11 +8,40 @@
 
 ## Instalation
 
-- Dependencies
+### Install dependencies
 
 ```shell
 poetry install
 ```
+
+## Setup whohacks locally
+
+### Create the database
+
+Local setup involves using the sqlite3 database. Before running the web server,
+we need to create the database with helper script:
+
+```shell
+poetry run python helpers/db_create.py
+```
+
+### Setup Environment Variables
+
+Set the `SECRET_KEY` variable:
+
+Windows: `set SECRET_KEY=example123`.
+
+Linux: `export SECRET_KEY=example123`.
+
+### Launch the web server
+
+```shell
+poetry run python -m whois
+```
+
+You can access the webpage by the `localhost:5000` (default settings).
+
+## Setup via Docker
 
 - Create .env file, buy it doesn't work. Go figure
 
@@ -19,20 +49,15 @@ poetry install
 source env.sh
 ```
 
-- Create database
+### Create the database
 
 ```shell
-# if running web app locally
-poetry run python helpers/db_create.py
-# if running web app in docker
 docker compose run web python helpers/db_create.py
 ```
 
-## Running
+### Deploy via docker-compose
 
 ```shell
-poetry run python -m whois
-# or
 docker compose up
 ```
 
@@ -43,6 +68,7 @@ see: https://github.com/navikt/mock-oauth2-server
 configuration can be found in ./tests/resources
 
 If you want for redirects to work properly you need to add mock oauth to `/etc/hosts`
+
 ```bash
 echo "127.0.0.1 oauth.localhost" >> /etc/hosts
 ```
@@ -67,13 +93,13 @@ This: `-v /etc/localtime:/etc/localtime:ro` is required to match the timezone in
 Sample:
 
 ```yaml
-version: '3'
+version: "3"
 services:
   rabbitmq:
-    image: 'rabbitmq:3.6-management-alpine'
+    image: "rabbitmq:3.6-management-alpine"
     ports:
-      - '5672:5672'
-      - '15672:15672'
+      - "5672:5672"
+      - "15672:15672"
   web:
     build: ./docker/web
     environment:
@@ -98,7 +124,6 @@ services:
 
 volumes:
   database:
-
 ```
 
 ### Envvars
