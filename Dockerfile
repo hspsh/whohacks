@@ -9,7 +9,7 @@ COPY pyproject.toml /app/
 COPY poetry.lock /app/
 
 WORKDIR /app
-RUN poetry install --no-dev
+RUN poetry install --only main
 COPY . .
 
 RUN mkdir /data && chown nobody /data

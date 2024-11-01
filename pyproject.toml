@@ -4,6 +4,7 @@ version = "1.5.0"
 description = ""
 authors = ["Norbert Szulc <norbert@not7cd.net>"]
 packages = [{ include = "whois" }]
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.11"
