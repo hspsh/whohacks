@@ -91,6 +91,10 @@ docker-compose run web python3 helpers/db_create.py
 docker-compose up
 ```
 
+## Testing
+
+You can run the tests with `poetry run python -m unittest`
+
 ### Caution
 
 This: `-v /etc/localtime:/etc/localtime:ro` is required to match the timezone in the container to timezone of the host
