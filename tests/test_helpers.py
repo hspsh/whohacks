@@ -42,8 +42,8 @@ def test_hidden():
     Should filter out hidden entities
     :return:
     """
-    assert len(filter_hidden(users[:])) is 2
-    assert len(filter_hidden(devices[:])) is 1
+    assert len(filter_hidden(users[:])) == 2
+    assert len(filter_hidden(devices[:])) == 1
 
 
 def test_ip_range():
