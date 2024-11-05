@@ -19,4 +19,3 @@ def test_parse_duration():
     for case, expected in data:
         result = parse_duration(case)
         assert result == expected
-

@@ -1,8 +1,12 @@
 import logging
+from datetime import datetime, timedelta, timezone
 from functools import wraps
-from urllib.parse import urlparse, urljoin
+from typing import List
+from urllib.parse import urljoin, urlparse
 
-from flask import request, abort
+from flask import abort, request
+
+from whois.entity.device import Device
 from whois.settings import ip_mask
 
 logging.basicConfig(level=logging.INFO)
@@ -73,3 +77,15 @@ def in_space_required():
         return func
 
     return decorator
+
+
+def filter_recent(delta: timedelta, devices: List[Device]):
+    """
+    Returns list of last connected devices
+    :param hours:
+    :param minutes:
+    :param seconds:
+    :return: list of devices
+    """
+    recent_time = datetime.now(timezone.utc) - delta
+    return list(filter(lambda device: device.recent_time > recent_time, devices))

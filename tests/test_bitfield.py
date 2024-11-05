@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from whois.types.bitfield import BitField
+from whois.entity.bitfield import BitField
 
 
 class BitFieldTest(TestCase):

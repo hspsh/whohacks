@@ -1,7 +1,6 @@
-import os
 import logging
-from datetime import datetime
-from whois.database import db, Device, User
+
+from whois.data.db.database import Device, User, db
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("db_create")

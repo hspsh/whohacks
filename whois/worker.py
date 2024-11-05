@@ -1,9 +1,9 @@
-from datetime import datetime, timezone
 import logging
 import time
+from datetime import datetime, timezone
 
 from whois import settings
-from whois.database import db, Device
+from whois.data.db.database import Device, db
 from whois.mikrotik import fetch_leases
 
 logger = logging.getLogger("mikrotik-worker")
