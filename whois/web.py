@@ -1,37 +1,22 @@
 import logging
-import os
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
-from flask import (
-    Flask,
-    flash,
-    render_template,
-    redirect,
-    url_for,
-    request,
-    jsonify,
-    abort,
-)
-from flask_cors import CORS
-from flask_login import (
-    LoginManager,
-    login_required,
-    current_user,
-    login_user,
-    logout_user,
-)
 from authlib.integrations.flask_client import OAuth
+from flask import (Flask, abort, flash, jsonify, redirect, render_template,
+                   request, url_for)
+from flask_cors import CORS
+from flask_login import (LoginManager, current_user, login_required,
+                         login_user, logout_user)
+from sqlalchemy.orm.exc import NoResultFound
 
 from whois import settings
-from whois.database import db, Device, User
-from whois.helpers import (
-    owners_from_devices,
-    filter_hidden,
-    unclaimed_devices,
-    filter_anon_names,
-    ip_range,
-    in_space_required,
-)
+from whois.data.db.database import Database
+from whois.data.repository.device_repository import DeviceRepository
+from whois.data.repository.user_repository import UserRepository
+from whois.entity.user import User, UserFlags
+from whois.helpers import (filter_anon_names, filter_hidden, filter_recent,
+                           in_space_required, ip_range, owners_from_devices,
+                           unclaimed_devices)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -40,6 +25,9 @@ app = Flask(__name__)
 app.config.from_object("whois.settings")
 login_manager = LoginManager()
 login_manager.init_app(app)
+database = Database()
+device_repository = DeviceRepository(database)
+user_repository = UserRepository(database)
 
 if settings.oidc_enabled:
     oauth = OAuth(app)
@@ -63,8 +51,8 @@ def local_time(dt: datetime):
 @login_manager.user_loader
 def load_user(user_id):
     try:
-        return User.get_by_id(user_id)
-    except User.DoesNotExist as exc:
+        return user_repository.get_by_id(user_id)
+    except NoResultFound as exc:
         app.logger.error("{}".format(exc))
         return None
 
@@ -72,7 +60,7 @@ def load_user(user_id):
 @app.before_request
 def before_request():
     app.logger.info("connecting to db")
-    db.connect()
+    database.connect()
 
     if request.headers.getlist("X-Forwarded-For"):
         ip_addr = request.headers.getlist("X-Forwarded-For")[0]
@@ -91,8 +79,12 @@ def before_request():
 
 @app.teardown_appcontext
 def after_request(error):
-    app.logger.info("closing db")
-    db.close()
+    if database.is_connected:
+        app.logger.info("Closing the database connection")
+        database.disconnect()
+    else:
+        app.logger.info("Database connection was already closed")
+
     if error:
         app.logger.error(error)
 
@@ -100,7 +92,8 @@ def after_request(error):
 @app.route("/")
 def index():
     """Serve list of people in hs, show panel for logged users"""
-    recent = Device.get_recent(**settings.recent_time)
+    devices = device_repository.get_all()
+    recent = filter_recent(timedelta(**settings.recent_time), devices)
     visible_devices = filter_hidden(recent)
     users = filter_hidden(owners_from_devices(visible_devices))
 
@@ -116,13 +109,14 @@ def index():
 @login_required
 @app.route("/devices")
 def devices():
-    recent = Device.get_recent(**settings.recent_time)
+    devices = device_repository.get_all()
+    recent = filter_recent(timedelta(**settings.recent_time), devices)
     visible_devices = filter_hidden(recent)
     users = filter_hidden(owners_from_devices(visible_devices))
 
     if current_user.is_authenticated:
         unclaimed = unclaimed_devices(recent)
-        mine = current_user.devices
+        mine = filter(lambda device: device.owner == current_user.get_id(), devices)
         return render_template(
             "devices.html",
             unclaimed=unclaimed,
@@ -147,13 +141,14 @@ def now_at_space():
         if key in request.args:
             period[key] = request.args.get(key, default=0, type=int)
 
-    devices = filter_hidden(Device.get_recent(**period))
-    users = filter_hidden(owners_from_devices(devices))
+    devices = device_repository.get_all()
+    recent = filter_recent(timedelta(**settings.recent_time), devices)
+    users = filter_hidden(owners_from_devices(recent))
 
     data = {
         "users": sorted(map(str, filter_anon_names(users))),
         "headcount": len(users),
-        "unknown_devices": len(unclaimed_devices(devices)),
+        "unknown_devices": len(unclaimed_devices(recent)),
     }
 
     app.logger.info("sending request for /api/now {}".format(data))
@@ -186,8 +181,8 @@ def device_view(mac_address):
     """Get info about device, claim device, release device"""
 
     try:
-        device = Device.get(Device.mac_address == mac_address)
-    except Device.DoesNotExist as exc:
+        device = device_repository.get_by_mac_address(mac_address)
+    except NoResultFound as exc:
         app.logger.error("{}".format(exc))
         return abort(404)
 
@@ -243,14 +238,13 @@ def register():
         password = request.form["password"]
 
         try:
-            user = User.register(username, password, display_name)
+            user = register(username, password, display_name)
         except Exception as exc:
             if exc.args[0] == "too_short":
                 flash("Password too short, minimum length is 3")
             else:
                 print(exc)
         else:
-            user.save()
             app.logger.info("registered new user: {}".format(user.username))
             flash("Registered.", "info")
 
@@ -269,16 +263,17 @@ def login():
 
     if request.method == "POST":
         try:
-            user = User.get(User.username == request.form["username"])
-        except User.DoesNotExist:
+            username = request.form["username"]
+            user = user_repository.get_by_username(username)
+        except NoResultFound:
             user = None
 
-        if user is not None:
+        if user:
             if user.is_sso:
                 # User created via sso -> redirect to sso login
                 app.logger.info("Redirect to SSO user: {}".format(user.username))
-                return redirect(url_for("login_oauth"))            
-            elif user.auth(request.form["password"]) is True:
+                return redirect(url_for("login_oauth"))
+            elif user.auth(request.form["password"]):
                 # User password hash match -> login user successfully
                 login_user(user)
                 app.logger.info("logged in: {}".format(user.username))
@@ -314,14 +309,13 @@ def callback():
     user_info = oauth.sso.parse_id_token(token)
     if user_info:
         try:
-            user = User.get(User.username == user_info["preferred_username"])
-        except User.DoesNotExist:
+            user = user_repository.get_by_username(user_info["preferred_username"])
+        except NoResultFound:
             username = user_info["preferred_username"]
             app.logger.info(
-                f"No SSO-loggined user: {username}.\n"
-                f"Register user {username}",
+                f"No SSO-loggined user: {username}.\n" f"Register user {username}",
             )
-            user = User.register_from_sso(username=username, display_name=username)
+            user = register_from_sso(username=username, display_name=username)
 
         if user is not None:
             login_user(user)
@@ -369,14 +363,49 @@ def profile_edit():
             else:
                 current_user.display_name = request.form["display_name"]
                 new_flags = request.form.getlist("flags")
-                current_user.is_hidden = "hidden" in new_flags
-                current_user.is_name_anonymous = "anonymous for public" in new_flags
+                if "hidden" in new_flags:
+                    current_user.flags.set_flag(UserFlags.is_hidden.value)
+                else:
+                    current_user.flags.unset_flag(UserFlags.is_hidden.value)
+
+                if "anonymous for public" in new_flags:
+                    current_user.flags.set_flag(UserFlags.is_name_anonymous.value)
+                else:
+                    current_user.flags.unset_flag(UserFlags.is_name_anonymous.value)
+
                 app.logger.info(
                     "flags: got {} set {:b}".format(new_flags, current_user.flags)
                 )
-                current_user.save()
+                user_repository.update(current_user)
+
                 flash("Saved", "success")
         else:
             flash("Invalid password", "error")
 
     return render_template("profile.html", user=current_user, **common_vars_tpl)
+
+
+def register(username, password, display_name=None):
+    """
+    Creates user and hashes his password
+    :param username: used in login
+    :param password: plain text to be hashed
+    :param display_name: displayed username
+    :return: user instance
+    """
+    user = User(username=username, display_name=display_name)
+    user.password = password
+    user_repository.insert(user)
+    return user
+
+
+def register_from_sso(username, display_name=None):
+    """
+    Creates user without any password. Such users can only login via SSO.
+    :param username: used in login
+    :param display_name: displayed username
+    :return: user instance
+    """
+    user = User(username=username, display_name=display_name)
+    user_repository.insert(user)
+    return user

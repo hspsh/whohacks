@@ -1,5 +1,6 @@
-from whois.web import app
 from unittest import TestCase
+
+from whois.web import app
 
 
 class ApiTestCase(TestCase):
@@ -11,4 +12,6 @@ class ApiTestCase(TestCase):
     def test_index(self):
         """User should be able to access the index page"""
         response = self.app.get("/")
-        assert response.status_code == 200
+        assert (
+            response.status_code == 200
+        ), f"Actual response code: {response.status_code}"
