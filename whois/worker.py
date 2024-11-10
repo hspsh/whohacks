@@ -2,16 +2,16 @@ import logging
 import time
 from datetime import datetime, timezone
 
-from whois import settings
 from whois.data.db.database import Device, db
 from whois.mikrotik import fetch_leases
+from whois.settings import production
 
 logger = logging.getLogger("mikrotik-worker")
 
 
 def update_devices() -> int:
     leases = fetch_leases(
-        settings.MIKROTIK_URL, settings.MIKROTIK_USER, settings.MIKROTIK_PASS
+        production.MIKROTIK_URL, production.MIKROTIK_USER, production.MIKROTIK_PASS
     )
 
     for lease in leases:
@@ -27,7 +27,9 @@ def update_devices() -> int:
 
 
 def run_worker():
-    if not all([settings.MIKROTIK_URL, settings.MIKROTIK_USER, settings.MIKROTIK_PASS]):
+    if not all(
+        [production.MIKROTIK_URL, production.MIKROTIK_USER, production.MIKROTIK_PASS]
+    ):
         raise ValueError("Mikrotik settings not set")
 
     while True:
@@ -38,7 +40,7 @@ def run_worker():
         except Exception:
             logger.exception("Could not update device information")
 
-        time.sleep(settings.worker_frequency_s)
+        time.sleep(production.worker_frequency_s)
 
 
 if __name__ == "__main__":
