@@ -2,11 +2,24 @@ import logging
 from datetime import datetime, timedelta, timezone
 
 from authlib.integrations.flask_client import OAuth
-from flask import (Flask, abort, flash, jsonify, redirect, render_template,
-                   request, url_for)
+from flask import (
+    Flask,
+    abort,
+    flash,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    url_for,
+)
 from flask_cors import CORS
-from flask_login import (LoginManager, current_user, login_required,
-                         login_user, logout_user)
+from flask_login import (
+    LoginManager,
+    current_user,
+    login_required,
+    login_user,
+    logout_user,
+)
 from sqlalchemy.orm.exc import NoResultFound
 
 from whois import settings
@@ -14,9 +27,15 @@ from whois.data.db.database import Database
 from whois.data.repository.device_repository import DeviceRepository
 from whois.data.repository.user_repository import UserRepository
 from whois.entity.user import User, UserFlags
-from whois.helpers import (filter_anon_names, filter_hidden, filter_recent,
-                           in_space_required, ip_range, owners_from_devices,
-                           unclaimed_devices)
+from whois.helpers import (
+    filter_anon_names,
+    filter_hidden,
+    filter_recent,
+    in_space_required,
+    ip_range,
+    owners_from_devices,
+    unclaimed_devices,
+)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

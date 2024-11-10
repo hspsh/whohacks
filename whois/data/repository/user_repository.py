@@ -3,8 +3,10 @@ from typing import List
 from sqlalchemy.orm import Session
 
 from whois.data.db.database import Database
-from whois.data.db.mapper.user_mapper import (user_to_usertable_mapper,
-                                              usertable_to_user_mapper)
+from whois.data.db.mapper.user_mapper import (
+    user_to_usertable_mapper,
+    usertable_to_user_mapper,
+)
 from whois.data.table.user import UserTable
 from whois.entity.user import User
 
