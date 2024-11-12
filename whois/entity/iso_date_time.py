@@ -10,6 +10,6 @@ class IsoDateTimeField:
     def db_value(self) -> str:
         return self.value.isoformat()
 
-    # def python_value(self, value: str) -> datetime:
-    #     if value:
-    #         return datetime.fromisoformat(value)
+    @property
+    def python_value(self) -> datetime:
+        return datetime.fromisoformat(self.value)

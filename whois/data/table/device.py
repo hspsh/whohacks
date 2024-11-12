@@ -21,7 +21,7 @@ class DeviceTable(Base):
 
     mac_address = Column(VARCHAR(17), primary_key=True, unique=True)
     hostname = Column(String, nullable=True)
-    last_seen = IsoDateTimeField()
+    last_seen = Column(IsoDateTimeField)
     owner = Column(Integer, ForeignKey("user.id"), nullable=True, name="user_id")
     flags = Column(BitField, nullable=True)
 

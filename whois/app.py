@@ -154,9 +154,8 @@ class WhoIs:
     def index(self):
         """Serve list of people in hs, show panel for logged users"""
         self.logger.debug("Called '/'")
-        devices = self.device_repository.get_all()
-        recent = self.helpers.filter_recent(
-            timedelta(**self.app_settings.RECENT_TIME), devices
+        recent = self.device_repository.get_recent(
+            timedelta(**self.app_settings.RECENT_TIME)
         )
         visible_devices = self.helpers.filter_hidden(recent)
         users = self.helpers.filter_hidden(
@@ -174,9 +173,8 @@ class WhoIs:
     @login_required
     def devices(self):
         self.logger.debug("Called '/devices'")
-        devices = self.device_repository.get_all()
-        recent = self.helpers.filter_recent(
-            timedelta(**self.app_settings.RECENT_TIME), devices
+        recent = self.device_repository.get_recent(
+            timedelta(**self.app_settings.RECENT_TIME)
         )
         visible_devices = self.helpers.filter_hidden(recent)
         users = self.helpers.filter_hidden(
@@ -209,9 +207,8 @@ class WhoIs:
             if key in request.args:
                 period[key] = request.args.get(key, default=0, type=int)
 
-        devices = self.device_repository.get_all()
-        recent = self.helpers.filter_recent(
-            timedelta(**self.app_settings.RECENT_TIME), devices
+        recent = self.device_repository.get_recent(
+            timedelta(**self.app_settings.RECENT_TIME)
         )
         users = self.helpers.filter_hidden(self.helpers.owners_from_devices(recent))
 
