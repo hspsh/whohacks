@@ -22,6 +22,7 @@ class ApiTestCase(TestCase):
         self.logger.addHandler(logging.FileHandler(f"{__name__}.log"))
 
         self.db = Database("sqlite:///whohacks.test.sqlite")
+        self.db.drop()
         self.whois = WhoIs(app_settings, mikrotik_settings, self.db, self.logger)
         self.app = self.whois.app.test_client()
         self.app.testing = True
