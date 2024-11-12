@@ -105,3 +105,6 @@ venv.bak/
 # End of https://www.gitignore.io/api/python
 .idea/
 *.db
+
+# Logs
+*.log

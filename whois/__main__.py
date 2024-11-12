@@ -1,4 +1,4 @@
+from whois.settings.production import mikrotik_settings
 from whois.web import app
-import whois.settings as settings
 
-app.run(host=settings.host)
+app.run(host=mikrotik_settings.HOST)
