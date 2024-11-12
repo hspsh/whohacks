@@ -185,7 +185,7 @@ class WhoIs:
 
         if current_user.is_authenticated:
             unclaimed = self.helpers.unclaimed_devices(recent)
-            mine = filter(lambda device: device.owner == current_user.get_id(), devices)
+            mine = self.device_repository.get_by_user_id(current_user.get_id())
             return render_template(
                 "devices.html",
                 unclaimed=unclaimed,
