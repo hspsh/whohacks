@@ -48,3 +48,13 @@ class DeviceRepository:
         with Session(self.database.engine) as session:
             devices_orm = session.query(DeviceTable).all()
             return list(map(devicetable_to_device_mapper, devices_orm))
+
+    def get_by_user_id(self, user_id: int) -> List[Device]:
+        with Session(self.database.engine) as session:
+            devices_orm = (
+                session.query(DeviceTable).where(DeviceTable.owner == user_id).all()
+            )
+            if len(devices_orm) > 0:
+                return list(map(devicetable_to_device_mapper, devices_orm))
+            else:
+                return list()
