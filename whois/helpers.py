@@ -79,14 +79,3 @@ class Helpers:
             return func
 
         return decorator(f)
-
-    def filter_recent(self, delta: timedelta, devices: List[Device]):
-        """
-        Returns list of last connected devices
-        :param hours:
-        :param minutes:
-        :param seconds:
-        :return: list of devices
-        """
-        recent_time = datetime.now(timezone.utc) - delta
-        return list(filter(lambda device: device.recent_time > recent_time, devices))

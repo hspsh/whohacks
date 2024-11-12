@@ -58,3 +58,16 @@ class DeviceRepository:
                 return list(map(devicetable_to_device_mapper, devices_orm))
             else:
                 return list()
+
+    def get_recent(self, delta: timedelta) -> List[Device]:
+        with Session(self.database.engine) as session:
+            recent_time = datetime.now(timezone.utc) - delta
+            devices_orm = (
+                session.query(DeviceTable)
+                .filter(DeviceTable.last_seen > recent_time)
+                .all()
+            )
+            if len(devices_orm) > 0:
+                return list(map(devicetable_to_device_mapper, devices_orm))
+            else:
+                return list()
