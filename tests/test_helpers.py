@@ -1,4 +1,7 @@
-from whois.helpers import *
+from unittest import TestCase
+
+from whois.helpers import Helpers
+from whois.settings.testing import app_settings
 
 
 class UserDummy:
@@ -24,32 +27,33 @@ device_fixtures = [
     ["00:00:00:00:00:00", users[1], True],
 ]
 devices = list(map(lambda f: DeviceDummy(*f), device_fixtures))
+helpers = Helpers(app_settings)
 
 
-def test_iterable():
-    """
-    All functions should return iterable
-    :return:
-    """
-    assert hasattr(filter_anon_names(users), "__len__")
-    assert hasattr(filter_hidden(users), "__len__")
-    assert hasattr(owners_from_devices(devices), "__len__")
-    assert hasattr(unclaimed_devices(devices), "__len__")
+class TestHelpers(TestCase):
 
+    def test_iterable(self):
+        """
+        All functions should return iterable
+        :return:
+        """
+        assert hasattr(helpers.filter_anon_names(users), "__len__")
+        assert hasattr(helpers.filter_hidden(users), "__len__")
+        assert hasattr(helpers.owners_from_devices(devices), "__len__")
+        assert hasattr(helpers.unclaimed_devices(devices), "__len__")
 
-def test_hidden():
-    """
-    Should filter out hidden entities
-    :return:
-    """
-    assert len(filter_hidden(users[:])) == 2
-    assert len(filter_hidden(devices[:])) == 1
+    def test_hidden(self):
+        """
+        Should filter out hidden entities
+        :return:
+        """
+        assert len(helpers.filter_hidden(users[:])) == 2
+        assert len(helpers.filter_hidden(devices[:])) == 1
 
-
-def test_ip_range():
-    """
-    ip_range should return if ip is in range
-    :return:
-    """
-    assert ip_range("192.168.88.1-255", "192.168.88.123") is True
-    assert ip_range("192.168.88.1-255", "192.168.80.100") is False
+    def test_ip_range(self):
+        """
+        ip_range should return if ip is in range
+        :return:
+        """
+        assert helpers.ip_range("192.168.88.1-255", "192.168.88.123") is True
+        assert helpers.ip_range("192.168.88.1-255", "192.168.80.100") is False
