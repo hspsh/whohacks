@@ -175,7 +175,9 @@ class WhoIs:
     def devices(self):
         self.logger.debug("Called '/devices'")
         devices = self.device_repository.get_all()
-        recent = self.filter_recent(timedelta(**self.app_settings.RECENT_TIME), devices)
+        recent = self.helpers.filter_recent(
+            timedelta(**self.app_settings.RECENT_TIME), devices
+        )
         visible_devices = self.helpers.filter_hidden(recent)
         users = self.helpers.filter_hidden(
             self.helpers.owners_from_devices(visible_devices)
