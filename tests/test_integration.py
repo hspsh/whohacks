@@ -1,7 +1,7 @@
 import logging
 from unittest import TestCase
 
-from whois.app import WhoIs
+from whois.app import WhohacksApp
 from whois.data.db.database import Database
 from whois.settings.testing import app_settings, mikrotik_settings
 
@@ -21,7 +21,7 @@ class ApiTestCase(TestCase):
         self.db = Database("sqlite:///whohacks.test.sqlite")
         self.db.drop()
         self.db.create_db()
-        self.whois = WhoIs(app_settings, mikrotik_settings, self.db, self.logger)
+        self.whois = WhohacksApp(app_settings, mikrotik_settings, self.db, self.logger)
         self.app = self.whois.app.test_client()
         self.app.testing = True
 
