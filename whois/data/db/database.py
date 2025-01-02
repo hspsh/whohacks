@@ -25,7 +25,6 @@ class Database:
             level=logging.DEBUG,
             force=True,
         )
-        self.logger.addHandler(logging.FileHandler(f"db-{self.db_name}.log"))
 
         self.engine = db.create_engine(db_url)
         self.metadata = db.MetaData()
