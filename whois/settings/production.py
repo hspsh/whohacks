@@ -4,6 +4,13 @@ from pytz import timezone
 
 from whois.settings.settings_template import AppSettings, MikrotikSettings
 
+try:
+    from importlib.metadata import version
+    _version = version('whois')
+except Exception:
+    _version = "unknown"
+
+
 if not os.environ["SECRET_KEY"]:
     raise ValueError("No SECRET_KEY set for Flask application")
 
@@ -12,7 +19,7 @@ if not os.environ.get("APP_IP_MASK", None):
 
 app_settings = AppSettings(
     SECRET_KEY=os.environ["SECRET_KEY"],
-    APP_VERSION="1.5.0",
+    APP_VERSION=_version,
     APP_TITLE="👀 kto hakuje",
     APP_NAME="Kto Hakuje",
     APP_BASE_URL="whois.at.hsp.sh",
