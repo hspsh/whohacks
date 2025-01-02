@@ -32,7 +32,7 @@ from whois.helpers import Helpers
 from whois.settings.settings_template import AppSettings, MikrotikSettings
 
 
-class WhoIs:
+class WhohacksApp:
 
     def __init__(
         self,
@@ -42,7 +42,7 @@ class WhoIs:
         logger: Logger,
     ):
         self.logger = logger
-        self.logger.debug("Initializing WhoIs...")
+        self.logger.debug("Initializing WhohacksApp...")
 
         self.app = Flask(__name__)
         self.cors = CORS(self.app, resources={r"/api/*": {"origins": "*"}})
@@ -66,7 +66,7 @@ class WhoIs:
         self.add_template_filters()
         self.register_routes()
 
-        self.logger.debug("Initialized WhoIs")
+        self.logger.debug("Initialized WhohacksApp")
 
         self.common_vars_tpl = {"app": self.app.config.get_namespace("APP_")}
 
