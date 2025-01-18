@@ -1,9 +1,7 @@
 import logging
 import os
-from typing import Callable
 
 import sqlalchemy as db
-from sqlalchemy.orm import Session
 
 from whois.data.db.base import Base
 from whois.data.table.device import DeviceTable
