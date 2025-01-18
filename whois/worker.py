@@ -2,12 +2,14 @@ import logging
 import time
 from datetime import datetime, timezone
 
-from whois.data.db.database import Device, db
+from whois.data.db.database import Database
+from whois.data.repository.device_repository import DeviceRepository, Device
 from whois.mikrotik import fetch_leases
 from whois.settings import production
 
 logger = logging.getLogger("mikrotik-worker")
-
+database = Database()
+device_repository = DeviceRepository(database)
 
 def update_devices() -> int:
     leases = fetch_leases(
@@ -15,13 +17,11 @@ def update_devices() -> int:
     )
 
     for lease in leases:
-        with db.atomic():
-            last_seen_date = datetime.now(timezone.utc) - lease.last_seen
-            Device.update_or_create(
-                mac_address=lease.mac_address,
-                last_seen=last_seen_date,
-                hostname=lease.host_name,
-            )
+        device = Device(lease.mac_address, lease.host_name, lease.last_seen)
+        if device_repository.get_by_mac_address(lease.mac_address):
+            device_repository.update(device)
+        else:
+            device_repository.insert(device)
 
     return len(leases)
 
