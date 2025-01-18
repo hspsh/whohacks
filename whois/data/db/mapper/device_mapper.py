@@ -6,7 +6,7 @@ def device_to_devicetable_mapper(device: Device) -> DeviceTable:
     return DeviceTable(
         mac_address=device.mac_address,
         hostname=device.hostname,
-        last_seen=device.last_seen,
+        last_seen=device.last_seen.python_value,
         owner=device.owner,
         flags=device.flags,
     )
