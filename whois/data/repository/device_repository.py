@@ -42,7 +42,7 @@ class DeviceRepository:
                 .where(DeviceTable.mac_address == mac_address)
                 .one()
             )
-            return map(devicetable_to_device_mapper, device_orm)
+            return next(map(devicetable_to_device_mapper, [device_orm]))
 
     def get_all(self) -> List[Device]:
         with Session(self.database.engine) as session:
