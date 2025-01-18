@@ -3,6 +3,7 @@ import time
 
 from whois.data.db.database import Database
 from whois.data.repository.device_repository import DeviceRepository, Device
+from whois.data.type.bitfield import BitField
 from whois.mikrotik import fetch_leases
 from whois.settings.production import mikrotik_settings
 
@@ -16,7 +17,7 @@ def update_devices() -> int:
     )
 
     for lease in leases:
-        device = Device(lease.mac_address, lease.host_name, lease.last_seen)
+        device = Device(lease.mac_address, lease.host_name, lease.last_seen, lease.client_id, BitField()) #TODO figure out how to pass flags
         if device_repository.get_by_mac_address(lease.mac_address):
             device_repository.update(device)
         else:
