@@ -1,6 +1,5 @@
 import logging
 import time
-from datetime import datetime, timezone
 
 from whois.data.db.database import Database
 from whois.data.repository.device_repository import DeviceRepository, Device
