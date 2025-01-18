@@ -30,7 +30,7 @@ class DeviceRepository:
                 .one()
             )
             device_orm.hostname = device.hostname
-            device_orm.last_seen = device.last_seen
+            device_orm.last_seen = device.last_seen.python_value
             device_orm.owner = device.owner
             device_orm.flags = device.flags
             session.commit()
