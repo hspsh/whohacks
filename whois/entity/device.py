@@ -20,3 +20,7 @@ class Device:
     last_seen: IsoDateTimeField
     owner: int
     flags: BitField
+
+    @property
+    def is_hidden(self) -> bool:
+        return self.flags.has_flag(DeviceFlags.is_hidden.value)

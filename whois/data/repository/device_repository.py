@@ -30,7 +30,7 @@ class DeviceRepository:
                 .one()
             )
             device_orm.hostname = device.hostname
-            device_orm.last_seen = device.last_seen
+            device_orm.last_seen = device.last_seen.python_value
             device_orm.owner = device.owner
             device_orm.flags = device.flags
             session.commit()
@@ -42,7 +42,7 @@ class DeviceRepository:
                 .where(DeviceTable.mac_address == mac_address)
                 .one()
             )
-            return map(devicetable_to_device_mapper, device_orm)
+            return next(map(devicetable_to_device_mapper, [device_orm]))
 
     def get_all(self) -> List[Device]:
         with Session(self.database.engine) as session:
