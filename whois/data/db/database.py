@@ -24,6 +24,7 @@ class Database:
             force=True,
         )
 
+        self.logger.debug(f'Creating engine for "{db_url}"')
         self.engine = db.create_engine(db_url)
         self.metadata = db.MetaData()
         self.connection = None
@@ -37,23 +38,23 @@ class Database:
         return self.connection is not None
 
     def connect(self) -> None:
-        self.logger.info(f"Connect to the database for {self.db_name}")
+        self.logger.info(f'Connect to the database for "{self.db_name}"')
         self.connection = self.engine.connect()
 
     def disconnect(self) -> None:
-        self.logger.info(f"Disconnect to the database for {self.db_name}")
+        self.logger.info(f'Disconnect to the database for "{self.db_name}"')
         if not self.connection:
             raise RuntimeError("Cannot close database connection - already closed")
         self.connection.close()
 
     def create_db(self) -> None:
         """Ensure that the database exists with given schema."""
-        self.logger.info(f"Create database {self.db_name}")
+        self.logger.info(f'Create database "{self.db_name}"')
         Base.metadata.create_all(self.engine)
 
     def drop(self) -> None:
         """WARNING: Drops the entire database."""
-        self.logger.warning(f"Drop database {self.db_name}")
+        self.logger.warning(f'Drop database "{self.db_name}"')
         if not self.is_connected:
             self.connect()
         Base.metadata.drop_all(self.engine)

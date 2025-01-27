@@ -210,7 +210,10 @@ class WhohacksApp:
         recent = self.device_repository.get_recent(
             timedelta(**self.app_settings.RECENT_TIME)
         )
-        users = self.helpers.filter_hidden(self.helpers.owners_from_devices(recent))
+        owners = self.helpers.owners_from_devices(recent)
+        users = self.helpers.filter_hidden(
+            [self.user_repository.get_by_id(owner) for owner in owners]
+        )
 
         data = {
             "users": sorted(map(str, self.helpers.filter_anon_names(users))),
