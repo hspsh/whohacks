@@ -6,11 +6,12 @@ from urllib.parse import urljoin, urlparse
 
 from flask import abort, request
 
+from helpers.logger import init_logger
 from whois.entity.device import Device
 from whois.settings.settings_template import AppSettings
-from helpers.logger import init_logger
 
 logger = init_logger(__name__)
+
 
 class Helpers:
 

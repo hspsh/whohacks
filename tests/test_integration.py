@@ -1,10 +1,10 @@
 import logging
 from unittest import TestCase
 
+from helpers.logger import init_logger
 from whois.app import WhohacksApp
 from whois.data.db.database import Database
 from whois.settings.testing import app_settings, mikrotik_settings
-from helpers.logger import init_logger
 
 
 class ApiTestCase(TestCase):

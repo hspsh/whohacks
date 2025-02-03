@@ -6,7 +6,8 @@ from whois.settings.settings_template import AppSettings, MikrotikSettings
 
 try:
     from importlib.metadata import version
-    _version = version('whois')
+
+    _version = version("whois")
 except Exception:
     _version = "unknown"
 

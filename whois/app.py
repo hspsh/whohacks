@@ -4,33 +4,20 @@ from datetime import datetime, timedelta
 from logging import Logger
 
 from authlib.integrations.flask_client import OAuth
-from flask import (
-    Flask,
-    abort,
-    flash,
-    jsonify,
-    redirect,
-    render_template,
-    request,
-    url_for,
-)
+from flask import (Flask, abort, flash, jsonify, redirect, render_template,
+                   request, url_for)
 from flask_cors import CORS
-from flask_login import (
-    LoginManager,
-    current_user,
-    login_required,
-    login_user,
-    logout_user,
-)
+from flask_login import (LoginManager, current_user, login_required,
+                         login_user, logout_user)
 from sqlalchemy.orm.exc import NoResultFound
 
+from helpers.logger import init_logger
 from whois.data.db.database import Database
 from whois.data.repository.device_repository import DeviceRepository
 from whois.data.repository.user_repository import UserRepository
 from whois.entity.user import User, UserFlags
 from whois.helpers import Helpers
 from whois.settings.settings_template import AppSettings, MikrotikSettings
-from helpers.logger import init_logger
 
 
 class WhohacksApp:

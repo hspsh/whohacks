@@ -3,10 +3,10 @@ import os
 
 import sqlalchemy as db
 
+from helpers.logger import init_logger
 from whois.data.db.base import Base
 from whois.data.table.device import DeviceTable
 from whois.data.table.user import UserTable
-from helpers.logger import init_logger
 
 
 class Database:
@@ -28,7 +28,6 @@ class Database:
         self.user_table = UserTable()
         self.device_table = DeviceTable()
         self.create_db()
-
 
     @property
     def is_connected(self) -> bool:

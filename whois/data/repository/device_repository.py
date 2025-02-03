@@ -3,15 +3,12 @@ from typing import List
 
 from sqlalchemy.orm import Session
 
+from helpers.logger import init_logger
 from whois.data.db.database import Database
-from whois.data.db.mapper.device_mapper import (
-    device_to_devicetable_mapper,
-    devicetable_to_device_mapper,
-)
+from whois.data.db.mapper.device_mapper import (device_to_devicetable_mapper,
+                                                devicetable_to_device_mapper)
 from whois.data.table.device import DeviceTable
 from whois.entity.device import Device
-
-from helpers.logger import init_logger
 
 
 class DeviceRepository:
@@ -19,7 +16,7 @@ class DeviceRepository:
     def __init__(self, database: Database) -> None:
         self.database = database
         self.logger = init_logger("DeviceRepository")
-        
+
     def insert(self, device: Device) -> None:
         self.logger.debug(f'Insert device: "{device.__repr__()}"')
         with Session(self.database.engine) as session:
@@ -51,7 +48,7 @@ class DeviceRepository:
             return next(map(devicetable_to_device_mapper, [device_orm]))
 
     def get_all(self) -> List[Device]:
-        self.logger.debug('Get all devices')
+        self.logger.debug("Get all devices")
         with Session(self.database.engine) as session:
             devices_orm = session.query(DeviceTable).all()
             return list(map(devicetable_to_device_mapper, devices_orm))

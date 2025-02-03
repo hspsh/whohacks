@@ -3,6 +3,7 @@ import os
 
 loggers = {}
 
+
 def get_loglevel(loglevel: str):
     match loglevel:
         case "DEBUG":
@@ -24,7 +25,7 @@ def get_loglevel(loglevel: str):
 def init_logger(name: str) -> logging.Logger:
     if loggers.get(name):
         return loggers[name]
-    
+
     logger = logging.getLogger(name)
     loglevel = get_loglevel(os.environ.get("LOGLEVEL"))
 
@@ -32,10 +33,10 @@ def init_logger(name: str) -> logging.Logger:
         fmt=f"({name}) %(asctime)s %(module)s %(levelname)s: %(message)s",
         datefmt="%m/%d/%Y %I:%M:%S %p",
     )
-    
+
     for handler in logger.handlers:
         logger.removeHandler(handler)
-    
+
     stream_handler = logging.StreamHandler()
     stream_handler.setFormatter(formatter)
     file_handler = logging.FileHandler(f"{name}.log")
@@ -45,7 +46,7 @@ def init_logger(name: str) -> logging.Logger:
     logger.addHandler(file_handler)
 
     logger.setLevel(loglevel)
-    
+
     loggers[name] = logger
 
     return logger
