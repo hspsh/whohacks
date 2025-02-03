@@ -355,7 +355,7 @@ class WhohacksApp:
                 return redirect(url_for("devices"))
             else:
                 self.logger.info(
-                    f"Failed to log in: username={request.form["username"]}"
+                    f'Failed to log in: username={request.form["username"]}'
                 )
                 flash("Invalid credentials", "error")
 
