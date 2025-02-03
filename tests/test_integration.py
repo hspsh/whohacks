@@ -4,24 +4,19 @@ from unittest import TestCase
 from whois.app import WhohacksApp
 from whois.data.db.database import Database
 from whois.settings.testing import app_settings, mikrotik_settings
+from helpers.logger import init_logger
 
 
 class ApiTestCase(TestCase):
 
     def setUp(self):
-        self.logger = logging.getLogger(__name__)
-        logging.basicConfig(
-            format="%(asctime)s %(module)s %(levelname)s: %(message)s",
-            datefmt="%m/%d/%Y %I:%M:%S %p",
-            level=logging.DEBUG,
-            force=True,
-        )
+        self.logger = init_logger(__name__)
         self.logger.addHandler(logging.FileHandler(f"{__name__}.log"))
 
         self.db = Database("sqlite:///whohacks.test.sqlite")
         self.db.drop()
         self.db.create_db()
-        self.whois = WhohacksApp(app_settings, mikrotik_settings, self.db, self.logger)
+        self.whois = WhohacksApp(app_settings, mikrotik_settings, self.db)
         self.app = self.whois.app.test_client()
         self.app.testing = True
 

@@ -8,10 +8,9 @@ from flask import abort, request
 
 from whois.entity.device import Device
 from whois.settings.settings_template import AppSettings
+from helpers.logger import init_logger
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
+logger = init_logger(__name__)
 
 class Helpers:
 
