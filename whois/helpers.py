@@ -21,10 +21,10 @@ class Helpers:
     def owners_from_devices(self, devices) -> Set[int]:
         return set(filter(None, map(lambda d: d.owner, devices)))
 
-    def filter_hidden(self, entities) -> List[Device]:
+    def filter_hidden(self, entities) -> List[User | Device]:
         return list(filter(lambda e: not e.is_hidden, entities))
 
-    def filter_anon_names(self, users) -> List[User]:
+    def filter_anon_users(self, users) -> List[User]:
         return list(filter(lambda u: not u.is_name_anonymous, users))
 
     def unclaimed_devices(self, devices) -> List[Device]:

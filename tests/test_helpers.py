@@ -37,7 +37,7 @@ class TestHelpers(TestCase):
         All functions should return iterable
         :return:
         """
-        assert hasattr(helpers.filter_anon_names(users), "__len__")
+        assert hasattr(helpers.filter_anon_users(users), "__len__")
         assert hasattr(helpers.filter_hidden(users), "__len__")
         assert hasattr(helpers.owners_from_devices(devices), "__len__")
         assert hasattr(helpers.unclaimed_devices(devices), "__len__")

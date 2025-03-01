@@ -160,13 +160,13 @@ class WhohacksApp:
             timedelta(**self.app_settings.RECENT_TIME)
         )
         visible_devices = self.helpers.filter_hidden(recent)
-        users = self.helpers.filter_hidden(
-            self.helpers.owners_from_devices(visible_devices)
-        )
+        user_ids = self.helpers.owners_from_devices(visible_devices)
+        users = [self.user_repository.get_by_id(user_id) for user_id in user_ids]
+        users = self.helpers.filter_hidden(users)
 
         return render_template(
             "landing.html",
-            users=self.helpers.filter_anon_names(users),
+            users=self.helpers.filter_anon_users(users),
             headcount=len(users),
             unknowncount=len(self.helpers.unclaimed_devices(recent)),
             **self.common_vars_tpl,
@@ -179,9 +179,9 @@ class WhohacksApp:
             timedelta(**self.app_settings.RECENT_TIME)
         )
         visible_devices = self.helpers.filter_hidden(recent)
-        users = self.helpers.filter_hidden(
-            self.helpers.owners_from_devices(visible_devices)
-        )
+        user_ids = self.helpers.owners_from_devices(visible_devices)
+        users = [self.user_repository.get_by_id(user_id) for user_id in user_ids]
+        users = self.helpers.filter_hidden(users)
 
         if current_user.is_authenticated:
             unclaimed = self.helpers.unclaimed_devices(recent)
@@ -191,7 +191,7 @@ class WhohacksApp:
                 unclaimed=unclaimed,
                 recent=recent,
                 my_devices=mine,
-                users=self.helpers.filter_anon_names(users),
+                users=self.helpers.filter_anon_users(users),
                 headcount=len(users),
                 **self.common_vars_tpl,
             )
@@ -213,13 +213,13 @@ class WhohacksApp:
         recent = self.device_repository.get_recent(
             timedelta(**self.app_settings.RECENT_TIME)
         )
-        owners = self.helpers.owners_from_devices(recent)
-        users = self.helpers.filter_hidden(
-            [self.user_repository.get_by_id(owner) for owner in owners]
-        )
+        user_ids = self.helpers.owners_from_devices(recent)
+        users = [self.user_repository.get_by_id(user_id) for user_id in user_ids]
+        users = self.helpers.filter_hidden(users)
+        users = self.helpers.filter_anon_users(users)
 
         data = {
-            "users": sorted(map(str, self.helpers.filter_anon_names(users))),
+            "users": sorted(map(str, self.helpers.filter_anon_users(users))),
             "headcount": len(users),
             "unknown_devices": len(self.helpers.unclaimed_devices(recent)),
         }
