@@ -13,7 +13,9 @@ RUN poetry install --only main
 COPY . .
 
 RUN mkdir /data && chown nobody /data
+RUN mkdir /logs && chown nobody /logs
 VOLUME ["/data"]
+VOLUME ["/logs"]
 
 USER nobody
 EXPOSE 8000
