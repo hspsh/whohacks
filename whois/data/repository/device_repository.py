@@ -5,8 +5,10 @@ from sqlalchemy.orm import Session
 
 from helpers.logger import init_logger
 from whois.data.db.database import Database
-from whois.data.db.mapper.device_mapper import (device_to_devicetable_mapper,
-                                                devicetable_to_device_mapper)
+from whois.data.db.mapper.device_mapper import (
+    device_to_devicetable_mapper,
+    devicetable_to_device_mapper,
+)
 from whois.data.table.device import DeviceTable
 from whois.entity.device import Device
 

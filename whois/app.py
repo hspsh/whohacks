@@ -4,11 +4,24 @@ from datetime import datetime, timedelta
 from logging import Logger
 
 from authlib.integrations.flask_client import OAuth
-from flask import (Flask, abort, flash, jsonify, redirect, render_template,
-                   request, url_for)
+from flask import (
+    Flask,
+    abort,
+    flash,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    url_for,
+)
 from flask_cors import CORS
-from flask_login import (LoginManager, current_user, login_required,
-                         login_user, logout_user)
+from flask_login import (
+    LoginManager,
+    current_user,
+    login_required,
+    login_user,
+    logout_user,
+)
 from sqlalchemy.orm.exc import NoResultFound
 
 from helpers.logger import init_logger
