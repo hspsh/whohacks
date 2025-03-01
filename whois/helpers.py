@@ -1,13 +1,12 @@
-import logging
-from datetime import datetime, timedelta, timezone
 from functools import wraps
-from typing import List
+from typing import List, Set
 from urllib.parse import urljoin, urlparse
 
 from flask import abort, request
 
 from helpers.logger import init_logger
 from whois.entity.device import Device
+from whois.entity.user import User
 from whois.settings.settings_template import AppSettings
 
 logger = init_logger(__name__)
@@ -19,26 +18,26 @@ class Helpers:
         self.app_settings = app_settings
         self.ip_mask = app_settings.IP_MASK
 
-    def owners_from_devices(self, devices):
+    def owners_from_devices(self, devices) -> Set[int]:
         return set(filter(None, map(lambda d: d.owner, devices)))
 
-    def filter_hidden(self, entities):
+    def filter_hidden(self, entities) -> List[Device]:
         return list(filter(lambda e: not e.is_hidden, entities))
 
-    def filter_anon_names(self, users):
+    def filter_anon_names(self, users) -> List[User]:
         return list(filter(lambda u: not u.is_name_anonymous, users))
 
-    def unclaimed_devices(self, devices):
+    def unclaimed_devices(self, devices) -> List[Device]:
         return list(filter(lambda d: d.owner is None, devices))
 
-    def is_safe_url(self, target):
+    def is_safe_url(self, target) -> bool:
         ref_url = urlparse(request.host_url)
         test_url = urlparse(urljoin(request.host_url, target))
         return (
             test_url.scheme in ("http", "https") and ref_url.netloc == test_url.netloc
         )
 
-    def ip_range(self, mask, address):
+    def ip_range(self, mask, address) -> bool:
         """
         Checks if given address is in space defined by mask
         :param mask: string for ex. '192.168.88.1-255'
