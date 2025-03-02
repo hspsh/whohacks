@@ -24,6 +24,7 @@ from flask_login import (
 )
 from sqlalchemy.orm.exc import NoResultFound
 
+from helpers.logger import init_logger
 from whois.data.db.database import Database
 from whois.data.repository.device_repository import DeviceRepository
 from whois.data.repository.user_repository import UserRepository
@@ -39,10 +40,9 @@ class WhohacksApp:
         app_settings: AppSettings,
         mikrotik_settings: MikrotikSettings,
         database: Database,
-        logger: Logger,
     ):
-        self.logger = logger
-        self.logger.debug("Initializing WhohacksApp...")
+        self.logger = init_logger("WhohacksApp")
+        self.logger.info("Initializing WhohacksApp...")
 
         self.app = Flask(__name__)
         self.cors = CORS(self.app, resources={r"/api/*": {"origins": "*"}})
@@ -66,7 +66,7 @@ class WhohacksApp:
         self.add_template_filters()
         self.register_routes()
 
-        self.logger.debug("Initialized WhohacksApp")
+        self.logger.info("Initialized WhohacksApp")
 
         self.common_vars_tpl = {"app": self.app.config.get_namespace("APP_")}
 
@@ -77,6 +77,12 @@ class WhohacksApp:
                 server_metadata_url=app_settings.APP_OAUTH_OPENID,
                 client_kwargs={"scope": "openid profile email"},
             )
+
+    def _log_endpoint(self, endpoint: str, details: str = None) -> None:
+        if details:
+            self.logger.debug(f'Called "{endpoint}", ' + details)
+        else:
+            self.logger.debug(f'Called "{endpoint}"')
 
     def add_rules(self) -> None:
         self.login_manager.user_loader(self.load_user)
@@ -116,6 +122,7 @@ class WhohacksApp:
 
     # Rules for Flask App
     def load_user(self, user_id):
+        self.logger.debug(f'Load user with ID: "{user_id}"')
         try:
             return self.user_repository.get_by_id(user_id)
         except NoResultFound as exc:
@@ -123,7 +130,7 @@ class WhohacksApp:
             return None
 
     def before_request(self):
-        self.app.logger.info("connecting to db")
+        self.logger.debug("Preparing for request")
         self.database.connect()
 
         if request.headers.getlist("X-Forwarded-For"):
@@ -141,30 +148,25 @@ class WhohacksApp:
             flash("Outside local network, some functions forbidden!", "outside-warning")
 
     def after_request(self, error):
-        if self.database.is_connected:
-            self.app.logger.info("Closing the database connection")
-            self.database.disconnect()
-        else:
-            self.app.logger.info("Database connection was already closed")
-
+        self.database.disconnect()
         if error:
-            self.app.logger.error(error)
+            self.logger.error(error)
 
     # Routes for Flask App
     def index(self):
         """Serve list of people in hs, show panel for logged users"""
-        self.logger.debug("Called '/'")
+        self._log_endpoint("/")
         recent = self.device_repository.get_recent(
             timedelta(**self.app_settings.RECENT_TIME)
         )
         visible_devices = self.helpers.filter_hidden(recent)
-        users = self.helpers.filter_hidden(
-            self.helpers.owners_from_devices(visible_devices)
-        )
+        user_ids = self.helpers.owners_from_devices(visible_devices)
+        users = [self.user_repository.get_by_id(user_id) for user_id in user_ids]
+        users = self.helpers.filter_hidden(users)
 
         return render_template(
             "landing.html",
-            users=self.helpers.filter_anon_names(users),
+            users=self.helpers.filter_anon_users(users),
             headcount=len(users),
             unknowncount=len(self.helpers.unclaimed_devices(recent)),
             **self.common_vars_tpl,
@@ -172,14 +174,14 @@ class WhohacksApp:
 
     @login_required
     def devices(self):
-        self.logger.debug("Called '/devices'")
+        self._log_endpoint("/devices")
         recent = self.device_repository.get_recent(
             timedelta(**self.app_settings.RECENT_TIME)
         )
         visible_devices = self.helpers.filter_hidden(recent)
-        users = self.helpers.filter_hidden(
-            self.helpers.owners_from_devices(visible_devices)
-        )
+        user_ids = self.helpers.owners_from_devices(visible_devices)
+        users = [self.user_repository.get_by_id(user_id) for user_id in user_ids]
+        users = self.helpers.filter_hidden(users)
 
         if current_user.is_authenticated:
             unclaimed = self.helpers.unclaimed_devices(recent)
@@ -189,7 +191,7 @@ class WhohacksApp:
                 unclaimed=unclaimed,
                 recent=recent,
                 my_devices=mine,
-                users=self.helpers.filter_anon_names(users),
+                users=self.helpers.filter_anon_users(users),
                 headcount=len(users),
                 **self.common_vars_tpl,
             )
@@ -200,7 +202,8 @@ class WhohacksApp:
         used by other services in HS,
         requests should be from hsp.sh domain or from HSWAN
         """
-        self.logger.debug("Called '/api/now'")
+        self._log_endpoint("/api/now")
+        self.logger.debug(f'Recieved arguments: "{request.args}"')
         period = {**self.app_settings.RECENT_TIME}
 
         for key in ["days", "hours", "minutes"]:
@@ -210,27 +213,31 @@ class WhohacksApp:
         recent = self.device_repository.get_recent(
             timedelta(**self.app_settings.RECENT_TIME)
         )
-        users = self.helpers.filter_hidden(self.helpers.owners_from_devices(recent))
+        user_ids = self.helpers.owners_from_devices(recent)
+        users = [self.user_repository.get_by_id(user_id) for user_id in user_ids]
+        users = self.helpers.filter_hidden(users)
+        users = self.helpers.filter_anon_users(users)
 
         data = {
-            "users": sorted(map(str, self.helpers.filter_anon_names(users))),
+            "users": sorted(map(str, users)),
             "headcount": len(users),
             "unknown_devices": len(self.helpers.unclaimed_devices(recent)),
         }
 
-        self.logger.info("sending request for /api/now {}".format(data))
+        self.logger.info("Sending request for /api/now {}".format(data))
 
         return jsonify(data)
 
     def set_device_flags(self, device, new_flags):
+        self.logger.debug(f"Update device flags: {device=}, {new_flags=}")
         if device.owner is not None and device.owner.get_id() != current_user.get_id():
-            self.logger.error("no permission for {}".format(current_user.username))
+            self.logger.error("No permission for {}".format(current_user.username))
             flash("No permission!".format(device.mac_address), "error")
             return
         device.is_hidden = "hidden" in new_flags
         device.is_esp = "esp" in new_flags
         device.is_infrastructure = "infrastructure" in new_flags
-        print(device.flags)
+        self.logger.debug(f"New device_flags={device.flags}")
         device.save()
         self.logger.info(
             "{} changed {} flags to {}".format(
@@ -241,7 +248,7 @@ class WhohacksApp:
 
     def device_view(self, mac_address):
         """Get info about device, claim device, release device"""
-        self.logger.debug("Called '/device'")
+        self._log_endpoint("/device")
         try:
             device = self.device_repository.get_by_mac_address(mac_address)
         except NoResultFound as exc:
@@ -262,8 +269,9 @@ class WhohacksApp:
         return render_template("device.html", device=device, **self.common_vars_tpl)
 
     def claim_device(self, device):
+        self.logger.debug(f"Claim device: {device.__repr__()}")
         if device.owner is not None:
-            self.logger.error("no permission for {}".format(current_user.username))
+            self.logger.error("No permission for {}".format(current_user.username))
             flash("No permission!".format(device.mac_address), "error")
             return
         device.owner = current_user.get_id()
@@ -274,8 +282,9 @@ class WhohacksApp:
         flash("Claimed {}!".format(device.mac_address), "success")
 
     def unclaim_device(self, device):
+        self.logger.debug(f"Unclaim device: {device.__repr__()}")
         if device.owner is not None and device.owner.get_id() != current_user.get_id():
-            self.logger.error("no permission for {}".format(current_user.username))
+            self.logger.error("No permission for {}".format(current_user.username))
             flash("No permission!".format(device.mac_address), "error")
             return
         device.owner = None
@@ -316,10 +325,10 @@ class WhohacksApp:
 
     def login(self):
         """Login using query to DB or SSO"""
-        self.logger.debug("Called '/login'")
+        self._log_endpoint("/login")
 
         if current_user.is_authenticated:
-            self.logger.error("Shouldn't login when auth")
+            self.logger.info(f"User {current_user} is already authenticated")
             flash("You are already logged in", "error")
             return redirect(url_for("devices"))
 
@@ -331,14 +340,21 @@ class WhohacksApp:
                 user = None
 
             if user:
+                self.logger.debug(f"User found: {user}")
                 if user.is_sso and self.app_settings.OIDC_ENABLED:
-                    # User created via sso -> redirect to sso login
-                    self.logger.info("Redirect to SSO user: {}".format(user.username))
+                    self.logger.info(
+                        f"User {user} is an SSO user. Redirecting to SSO login"
+                    )
                     return redirect(url_for("login_oauth"))
                 elif user.auth(request.form["password"]):
                     # User password hash match -> login user successfully
-                    login_user(user)
-                    self.logger.info("logged in: {}".format(user.username))
+                    self.logger.info(f"User {user} is a regular user. Attempt login")
+                    login_success = login_user(user)
+                    if login_success:
+                        self.logger.info(f"User {user} was successfully authenticated")
+                    else:
+                        self.logger.info(f"User {user} was NOT authenticated")
+
                 else:
                     pass
 
@@ -351,7 +367,9 @@ class WhohacksApp:
                 )
                 return redirect(url_for("devices"))
             else:
-                self.logger.info("failed log in: {}".format(request.form["username"]))
+                self.logger.info(
+                    f'Failed to log in: username={request.form["username"]}'
+                )
                 flash("Invalid credentials", "error")
 
         return render_template(
@@ -361,12 +379,12 @@ class WhohacksApp:
         )
 
     def login_oauth(self):
-        self.logger.debug("Called '/login/oauth'")
+        self._log_endpoint("/login/oauth")
         redirect_uri = url_for("callback", _external=True)
         return self.oauth.sso.authorize_redirect(redirect_uri)
 
     def callback(self):
-        self.logger.debug("Called '/login/callback'")
+        self._log_endpoint("/login/callback")
         token = self.oauth.sso.authorize_access_token()
         user_info = self.oauth.sso.parse_id_token(token)
         if user_info:
@@ -399,16 +417,15 @@ class WhohacksApp:
         return redirect(url_for("login"))
 
     def logout(self):
-        self.logger.debug("Called '/logout'")
         username = current_user.username
+        self._log_endpoint("/logout", f"{username=}")
         logout_user()
         self.app.logger.info("logged out: {}".format(username))
         flash("Logged out.", "info")
         return redirect(url_for("index"))
 
     def profile_edit(self):
-        # TODO: logging
-        self.logger.debug("Called '/profile'")
+        self._log_endpoint("/profile")
         if request.method == "POST":
             if current_user.auth(request.values.get("password", None)) is True:
                 try:
@@ -456,8 +473,10 @@ class WhohacksApp:
         :param display_name: displayed username
         :return: user instance
         """
+        self.logger.debug(f"Registering user: {username}")
         user = User(username=username, display_name=display_name)
         user.password = password
+        self.logger.debug(f"Final user: {user.__repr__()}")
         self.user_repository.insert(user)
         return user
 
@@ -468,6 +487,8 @@ class WhohacksApp:
         :param display_name: displayed username
         :return: user instance
         """
+        self.logger.debug(f"Registering user (SSO): {username}")
         user = User(username=username, display_name=display_name)
+        self.logger.debug(f"Final user: {user.__repr__()}")
         self.user_repository.insert(user)
         return user
