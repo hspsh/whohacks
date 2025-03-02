@@ -7,6 +7,7 @@ from whois.data.repository.device_repository import Device, DeviceRepository
 from whois.data.type.bitfield import BitField
 from whois.mikrotik import fetch_leases
 from whois.settings.production import mikrotik_settings
+from datetime import datetime
 
 logger = init_logger("mikrotik-worker")
 database = Database()
@@ -26,7 +27,7 @@ def update_devices() -> int:
         device = Device(
             lease.mac_address,
             lease.host_name,
-            lease.last_seen,
+            datetime.now() - lease.last_seen,
             lease.client_id,
             BitField(),
         )  # TODO figure out how to pass flags
