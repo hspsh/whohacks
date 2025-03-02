@@ -219,7 +219,7 @@ class WhohacksApp:
         users = self.helpers.filter_anon_users(users)
 
         data = {
-            "users": sorted(map(str, self.helpers.filter_anon_users(users))),
+            "users": sorted(map(str, users)),
             "headcount": len(users),
             "unknown_devices": len(self.helpers.unclaimed_devices(recent)),
         }
