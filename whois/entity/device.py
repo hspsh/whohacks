@@ -1,8 +1,8 @@
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
 
 from whois.entity.bitfield import BitField
-from whois.entity.iso_date_time import IsoDateTimeField
 
 
 class DeviceFlags(Enum):
@@ -17,7 +17,7 @@ class DeviceFlags(Enum):
 class Device:
     mac_address: str
     hostname: str
-    last_seen: IsoDateTimeField
+    last_seen: datetime
     owner: int
     flags: BitField
 
